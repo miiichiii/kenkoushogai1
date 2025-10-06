@@ -1,0 +1,510 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> 目クイズ</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+      background-size: cover; 
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1, h2 {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+
+}
+    .quiz-container, .result-card {
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .question {
+      font-size: 1.3em;
+      margin-bottom: 20px;
+      color: #1d1d1f;
+    }
+    .options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    .option {
+      background-color: rgba(255, 255, 255, 0.7);
+  border: none;
+  border-radius: 16px;
+  padding: 15px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.3s ease 0.1s, transform 0.3s ease;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .option:hover {
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    .option.selected {
+      background-color: #007aff;
+      color: #fff;
+    }
+    .option.disabled {
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+      }
+    /* 正解時のグラデーション */
+.option.correct {
+  background: linear-gradient(135deg, #34c759, #a8e6cf); /* 正解のグラデーション */
+  color: #fff;
+}
+
+/* 不正解時のグラデーション */
+.option.incorrect {
+  background: linear-gradient(135deg, #ff3b30, #ff9a8b); /* 不正解のグラデーション */
+  color: #fff;
+}
+
+    .option::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.1);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .option:active::after {
+      transform: scale(0.98);
+    }
+    .explanation {
+  margin-top: 20px;
+  font-size: 1em;
+  color: #333;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-left: 5px solid #4caf50;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  opacity: 1; /* 修正 */
+  transition: opacity 0.3s ease;
+}
+
+.explanation-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #4caf50;
+}
+
+.explanation-icon {
+  font-size: 1.5em;
+  margin-right: 10px;
+}
+    .nav-button {
+  background: linear-gradient(135deg, #007aff, #5ac8fa);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  margin-top: 20px;
+  width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-button:hover {
+  background: linear-gradient(135deg, #005bb5, #4aa0d3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.nav-button:active {
+  transform: scale(0.98);
+}
+    .result-card {
+      margin-bottom: 20px;
+    }
+    .result-card h3 {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+    .result-status {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .correct {
+      color: #34c759;
+    }
+    .incorrect {
+      color: #ff3b30;
+    }
+    #attendance-link {
+      background-color: #34c759;
+      color: white;
+      padding: 15px;
+      border-radius: 12px;
+      margin-top: 20px;
+      text-align: center;
+      display: none;
+    }
+    #attendance-link a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    #attendance-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 style="text-align: center;">目クイズ</h1>
+    <div id="quiz-container" class="quiz-container">
+      <div id="quiz-content">
+        <div id="question" class="question"></div>
+        <div id="options" class="options"></div>
+        <div id="explanation" class="explanation"></div>
+      </div>
+      <button id="next" class="nav-button" onclick="nextQuestion()">次の問題</button>
+    </div>
+    <div id="result-container"></div>
+    <div id="attendance-link"></div>
+  </div>
+  
+  <script>
+    const quizData = [
+  {
+    "question": "眼球の外層を構成する膜はどれか？",
+    "options": ["網膜", "強膜", "虹彩", "硝子体"],
+    "answer": 1,
+    "explanation": "眼球の外層は強靭なコラーゲン線維からなる強膜で、眼球の約5/6を占めています"
+  },
+  {
+    "question": "光の屈折を調整しピントを合わせる役割を持つのはどれか？",
+    "options": ["水晶体", "角膜", "網膜", "硝子体"],
+    "answer": 0,
+    "explanation": "水晶体は遠近調節を行い、光を屈折させて網膜上に像を結ぶ役割を果たしています"
+  },
+  {
+    "question": "瞳孔の大きさを縮小させる神経はどれか？",
+    "options": ["交感神経", "副交感神経", "視神経", "外転神経"],
+    "answer": 1,
+    "explanation": "副交感神経は瞳孔括約筋を収縮させ、瞳孔の大きさを縮小させます"
+  },
+  {
+    "question": "角膜の表面を覆っているのはどれか？",
+    "options": ["単層扁平上皮", "重層扁平上皮", "円柱上皮", "立方上皮"],
+    "answer": 1,
+    "explanation": "角膜の表面は非角化重層扁平上皮で覆われており、強膜の結膜上皮に続いています"
+  },
+  {
+    "question": "眼房水の流出を担う構造はどれか？",
+    "options": ["瞳孔", "毛様体", "強膜静脈洞", "視神経"],
+    "answer": 2,
+    "explanation": "強膜静脈洞（シュレム管）は眼房水の流出部であり、眼内圧の調整に関与します"
+  },
+  {
+    "question": "遠近調節に関わる筋肉はどれか？",
+    "options": ["瞳孔散大筋", "毛様体筋", "眼輪筋", "内側直筋"],
+    "answer": 1,
+    "explanation": "毛様体筋は収縮して水晶体の厚さを調整し、遠近調節を行います"
+  },
+  {
+    "question": "虹彩に存在しない成分はどれか？",
+    "options": ["色素", "血管", "神経", "視細胞"],
+    "answer": 3,
+    "explanation": "虹彩は血管、神経、色素を含みますが、視細胞は含まれていません。視細胞は網膜に存在します"
+  },
+  {
+    "question": "眼球内部を暗くする役割を持つのはどれか？",
+    "options": ["強膜", "脈絡膜", "硝子体", "角膜"],
+    "answer": 1,
+    "explanation": "脈絡膜は血管と色素細胞が豊富で、内部を暗くして眼球壁に栄養を与えます"
+  },
+  {
+    "question": "色覚に関与するのはどれか？",
+    "options": ["視細胞", "毛様体", "瞳孔散大筋", "強膜"],
+    "answer": 0,
+    "explanation": "視細胞は色覚に関与し、特に錐体細胞は色を識別します"
+  },
+  {
+    "question": "光を感じない部分はどれか？",
+    "options": ["黄斑", "中心窩", "視神経乳頭", "虹彩"],
+    "answer": 2,
+    "explanation": "視神経乳頭には視細胞がなく、光を感じないため盲点とも呼ばれます"
+  },
+  {
+    "question": "眼球内の透明なゼリー状の物質はどれか？",
+    "options": ["眼房水", "水晶体", "硝子体", "虹彩"],
+    "answer": 2,
+    "explanation": "硝子体は水晶体の後ろにあり、眼球の大部分を占めるゼリー状の物質です"
+  },
+  {
+    "question": "暗順応に重要な物質はどれか？",
+    "options": ["ロドプシン", "ビタミンD", "アドレナリン", "セロトニン"],
+    "answer": 0,
+    "explanation": "ロドプシンは視細胞内で光を感じ、暗順応に重要な役割を果たします"
+  },
+  {
+    "question": "眼球の運動を調節する神経でないものはどれか？",
+    "options": ["動眼神経", "滑車神経", "外転神経", "視神経"],
+    "answer": 3,
+    "explanation": "視神経は視覚を伝達する神経であり、眼球の運動には関与しません"
+  },
+  {
+    "question": "緑内障の原因となるのはどれか？",
+    "options": ["網膜の損傷", "眼圧の上昇", "水晶体の硬化", "毛様体筋の収縮"],
+    "answer": 1,
+    "explanation": "眼房水の流出が阻害され、眼内圧が上昇することで緑内障が発生します"
+  },
+  {
+    "question": "瞳孔が収縮する反射はどれか？",
+    "options": ["角膜反射", "瞳孔反射", "瞬目反射", "前庭反射"],
+    "answer": 1,
+    "explanation": "瞳孔反射は、光の強さに応じて瞳孔の大きさを調節する反射です"
+  },
+  {
+    "question": "加齢により起こる視覚の変化で正しいのはどれか？",
+    "options": ["ロドプシンの増加", "水晶体の柔軟性の低下", "視神経の太さの増加", "硝子体の硬化"],
+    "answer": 1,
+    "explanation": "加齢により水晶体が硬くなり、遠近調節が困難になる現象を老視と呼びます"
+  },
+  {
+    "question": "涙液を鼻腔へと導く管はどれか？",
+    "options": ["涙管", "鼻涙管", "涙点", "涙腺"],
+    "answer": 1,
+    "explanation": "涙液は鼻涙管を通って鼻腔の下鼻道に流れ込みます"
+  },
+  {
+    "question": "視力1.0の人が識別できる最小の視角はどれか？",
+    "options": ["1度", "30分", "1分", "0.1度"],
+    "answer": 2,
+    "explanation": "視力1.0は、1分角の視角を識別できる能力を指します"
+  },
+  {
+    "question": "中心窩の特徴として正しいのはどれか？",
+    "options": ["錐体が密集している", "杆体が密集している", "神経線維が密集している", "色素細胞が多い"],
+    "answer": 0,
+    "explanation": "中心窩は錐体が集まっており、視力が最も高くなる部分です"
+  },
+  {
+    "question": "夜盲症の原因となるビタミン欠乏はどれか？",
+    "options": ["ビタミンA", "ビタミンB", "ビタミンC", "ビタミンD"],
+    "answer": 0,
+    "explanation": "ビタミンAはロドプシンの生成に関与し、欠乏すると夜盲症（鳥目）になります"
+  }
+]
+;
+
+      let currentQuestion = 0;
+    let score = 0;
+    let userAnswers = [];
+    let shuffledOptions = [];
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function loadQuestion() {
+      const question = quizData[currentQuestion];
+      document.getElementById('question').textContent = question.question;
+
+      shuffledOptions = shuffleArray([...question.options]);
+      const optionsHtml = shuffledOptions.map((option, index) => `
+        <div class="option" onclick="selectOption(${index})">${option}</div>
+      `).join('');
+
+      document.getElementById('options').innerHTML = optionsHtml;
+
+      // 解説のリセット
+      const explanationEl = document.getElementById('explanation');
+      explanationEl.style.opacity = '0';
+      explanationEl.style.display = 'none';
+    }
+
+    function selectOption(index) {
+  const options = document.querySelectorAll('.option');
+  if (options[index].classList.contains('disabled')) {
+    return;
+  }
+
+  // すべての選択肢を無効化
+  options.forEach(option => {
+    option.classList.add('disabled');
+  });
+
+  // 選択肢を選んだときに`selected`クラスを追加
+  options[index].classList.add('selected');
+
+  // 現在の問題を取得
+  const question = quizData[currentQuestion];
+  const selectedAnswerIndex = question.options.indexOf(shuffledOptions[index]);
+  userAnswers[currentQuestion] = selectedAnswerIndex;
+
+  // 解説の表示内容を設定
+  const explanationEl = document.getElementById('explanation');
+  explanationEl.innerHTML = `
+    <div class="explanation-header">
+      <span class="explanation-icon">💡</span>
+      解説
+    </div>
+    ${question.explanation}
+  `;
+  
+  // 一旦解説を見えないようにしてから表示の遅延を設定
+  explanationEl.style.opacity = '0';
+  explanationEl.style.display = 'block'; // まず表示を「block」にする
+
+  // 遅延を設定して解説をフェードイン
+  setTimeout(() => {
+    explanationEl.style.opacity = '1'; // 遅れてopacityを1にする
+  }, 200); // 200msの遅延を設定
+
+  // 正解・不正解のクラスを付与してグラデーションを適用
+  if (selectedAnswerIndex === question.answer) {
+    explanationEl.style.backgroundColor = '#e8f5e9';
+    explanationEl.style.borderLeftColor = '#4caf50';
+    options[index].classList.add('correct'); // 正解時に`correct`クラスを追加
+  } else {
+    explanationEl.style.backgroundColor = '#ffebee';
+    explanationEl.style.borderLeftColor = '#f44336';
+    options[index].classList.add('incorrect'); // 不正解時に`incorrect`クラスを追加
+  }
+}
+
+function loadQuestion() {
+  const question = quizData[currentQuestion];
+  document.getElementById('question').textContent = question.question;
+
+  shuffledOptions = shuffleArray([...question.options]);
+  const optionsHtml = shuffledOptions.map((option, index) => `
+    <div class="option" onclick="selectOption(${index})">${option}</div>
+  `).join('');
+
+  document.getElementById('options').innerHTML = optionsHtml;
+
+  // 解説のリセット
+  const explanationEl = document.getElementById('explanation');
+  explanationEl.style.display = 'none'; // 解説を非表示に
+  explanationEl.style.opacity = '0'; // 解説のopacityをリセット
+}
+
+function loadQuestion() {
+  const question = quizData[currentQuestion];
+  document.getElementById('question').textContent = question.question;
+
+  shuffledOptions = shuffleArray([...question.options]);
+  const optionsHtml = shuffledOptions.map((option, index) => `
+    <div class="option" onclick="selectOption(${index})">${option}</div>
+  `).join('');
+
+  document.getElementById('options').innerHTML = optionsHtml;
+
+  // 解説のリセット
+  const explanationEl = document.getElementById('explanation');
+  explanationEl.style.display = 'none'; // 解説を非表示に
+}
+    function nextQuestion() {
+      const selectedOption = document.querySelector('.option.selected');
+      if (selectedOption === null) {
+        alert('選択肢を選んでください');
+        return; 
+      }
+
+      if (currentQuestion < quizData.length - 1) {
+        currentQuestion++;
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      score = userAnswers.reduce((total, answer, index) => 
+        total + (answer === quizData[index].answer ? 1 : 0), 0);
+
+      const resultContainer = document.getElementById('result-container');
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.style.display = 'none';
+
+      const percentage = (score / quizData.length) * 100;
+      let resultHtml = `
+        <h2>クイズ結果</h2>
+        <p>正解数: ${score} / ${quizData.length}</p>
+        <p>正答率: ${percentage.toFixed(2)}%</p>
+      `;
+
+      quizData.forEach((question, index) => {
+        const isCorrect = userAnswers[index] === question.answer;
+        resultHtml += `
+          <div class="result-card">
+            <h3>問題 ${index + 1}</h3>
+            <p class="result-status ${isCorrect ? 'correct' : 'incorrect'}">
+              ${isCorrect ? '正解' : '不正解'}
+            </p>
+            <p><strong>質問:</strong> ${question.question}</p>
+            <p><strong>あなたの回答:</strong> ${question.options[userAnswers[index]] || '未回答'}</p>
+            <p><strong>正解:</strong> ${question.options[question.answer]}</p>
+            <p><strong>説明:</strong> ${question.explanation}</p>
+          </div>
+        `;
+      });
+
+      resultHtml += `<button class="nav-button" onclick="restartQuiz()">もう一度挑戦する</button>`;
+      resultContainer.innerHTML = resultHtml;
+
+      if (percentage >= 80) {
+        const attendanceLink = document.getElementById('attendance-link');
+        attendanceLink.style.display = 'block';
+        attendanceLink.innerHTML = `
+          <p>おめでとうございます！80%以上の正答率です。</p>
+          <a href="https://forms.gle/TgN3hFvntvhX7kax7" target="_blank">出席確認フォームに回答する</a>
+        `;
+      }
+    }
+
+    function restartQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      userAnswers = [];
+      shuffledOptions = [];
+      document.getElementById('quiz-container').style.display = 'block';
+      document.getElementById('result-container').innerHTML = '';
+      document.getElementById('attendance-link').style.display = 'none';
+      loadQuestion();
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
