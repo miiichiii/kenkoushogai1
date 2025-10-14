@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第2回確認テスト</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+      background-size: cover; 
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1, h2 {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+
+}
+    .quiz-container, .result-card {
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .question {
+      font-size: 1.3em;
+      margin-bottom: 20px;
+      color: #1d1d1f;
+    }
+    .options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    .option {
+      background-color: rgba(255, 255, 255, 0.7);
+  border: none;
+  border-radius: 16px;
+  padding: 15px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.3s ease 0.1s, transform 0.3s ease;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .option:hover {
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    .option.selected {
+      background-color: #007aff;
+      color: #fff;
+    }
+    .option.disabled {
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+      }
+    /* 正解時のグラデーション */
+.option.correct {
+  background: linear-gradient(135deg, #34c759, #a8e6cf); /* 正解のグラデーション */
+  color: #fff;
+}
+
+/* 不正解時のグラデーション */
+.option.incorrect {
+  background: linear-gradient(135deg, #ff3b30, #ff9a8b); /* 不正解のグラデーション */
+  color: #fff;
+}
+
+    .option::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.1);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .option:active::after {
+      transform: scale(0.98);
+    }
+    .explanation {
+  margin-top: 20px;
+  font-size: 1em;
+  color: #333;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-left: 5px solid #4caf50;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  opacity: 1; /* 修正 */
+  transition: opacity 0.3s ease;
+}
+
+.explanation-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #4caf50;
+}
+
+.explanation-icon {
+  font-size: 1.5em;
+  margin-right: 10px;
+}
+    .nav-button {
+  background: linear-gradient(135deg, #007aff, #5ac8fa);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  margin-top: 20px;
+  width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-button:hover {
+  background: linear-gradient(135deg, #005bb5, #4aa0d3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.nav-button:active {
+  transform: scale(0.98);
+}
+    .result-card {
+      margin-bottom: 20px;
+    }
+    .result-card h3 {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+    .result-status {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .correct {
+      color: #34c759;
+    }
+    .incorrect {
+      color: #ff3b30;
+    }
+    #attendance-link {
+      background-color: #34c759;
+      color: white;
+      padding: 15px;
+      border-radius: 12px;
+      margin-top: 20px;
+      text-align: center;
+      display: none;
+    }
+    #attendance-link a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    #attendance-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 style="text-align: center;">第2回確認テスト（健康障害１）</h1>
+    <div id="quiz-container" class="quiz-container">
+      <div id="quiz-content">
+        <div id="question" class="question"></div>
+        <div id="options" class="options"></div>
+        <div id="explanation" class="explanation"></div>
+      </div>
+      <button id="next" class="nav-button" onclick="nextQuestion()">次の問題</button>
+    </div>
+    <div id="result-container"></div>
+    <div id="attendance-link"></div>
+  </div>
+  
+  
+  <script>
+    const quizData = [
+{
+"question": "女性の骨盤内で腹腔の最も低い位置にあり、液体が溜まりやすい部位はどれか。",
+"options": [
+"直腸子宮窩（ダグラス窩）",
+"膀胱子宮窩",
+"子宮広間膜",
+"子宮円索"
+],
+"answer": 0,
+"explanation": "直腸子宮窩（ダグラス窩）は子宮と直腸の間のくぼみで、腹腔内で最も低い位置にあるため、腹水などが溜まりやすい臨床的に重要な部位である。"
+},
+{
+"question": "子宮壁の構造について、最も内側にあり月経周期でホルモンの影響を受けて変化する層はどれか。",
+"options": [
+"子宮外膜",
+"子宮筋層",
+"子宮内膜",
+"子宮頸部"
+],
+"answer": 2,
+"explanation": "子宮壁は外側から子宮外膜、厚い筋層である子宮筋層、そして最も内側の子宮内膜の三層構造である。子宮内膜は、受精卵の着床に備えて増殖し、妊娠が成立しない場合は剥離して月経となる。"
+},
+{
+"question": "排卵後の卵胞が変化して形成され、プロゲステロン（黄体ホルモン）を分泌する組織はどれか。",
+"options": [
+"白体",
+"黄体",
+"成熟卵胞",
+"原始卵胞"
+],
+"answer": 1,
+"explanation": "排卵後の卵胞は黄体という内分泌組織に変化し、妊娠の維持に必要なプロゲステロンなどを分泌する。妊娠が成立しない場合、黄体は退化して白体という瘢痕組織になる。"
+},
+{
+"question": "骨盤底の大部分を占め、膀胱や子宮などの骨盤内臓器をハンモック状に支える主要な筋肉はどれか。",
+"options": [
+"大殿筋",
+"外肛門括約筋",
+"肛門挙筋",
+"大胸筋"
+],
+"answer": 2,
+"explanation": "肛門挙筋は骨盤底筋群の中心となる最も大きな筋肉で、骨盤内臓器を下方から支える重要な役割を持つ。大殿筋は臀部の筋肉、外肛門括約筋は肛門を閉める筋肉である。"
+},
+{
+"question": "女性の外生殖器のうち、発生学的に男性の陰茎と相同な器官はどれか。",
+"options": [
+"小陰唇",
+"大陰唇",
+"陰核",
+"腟前庭"
+],
+"answer": 2,
+"explanation": "陰核は海綿体組織からなる勃起性組織であり、発生学的に男性の陰茎と相同な器官である。"
+},
+{
+"question": "精巣で作られた精子が成熟し、貯蔵される場所はどれか。",
+"options": [
+"精巣",
+"精巣上体",
+"精嚢",
+"前立腺"
+],
+"answer": 1,
+"explanation": "精巣で産生された精子は、精巣の後ろに位置する精巣上体に運ばれ、そこで運動能を獲得するなど成熟し、射精されるまで貯蔵される。"
+},
+{
+"question": "精巣の曲精細管の間に存在し、男性ホルモン（テストステロン）を産生する細胞はどれか。",
+"options": [
+"セルトリ細胞",
+"ライディッヒ細胞",
+"精祖細胞",
+"精子細胞"
+],
+"answer": 1,
+"explanation": "ライディッヒ細胞（間質細胞）は精巣の曲精細管の間に存在し、下垂体からのLH（黄体形成ホルモン）の刺激を受けてテストステロンを産生・分泌する。"
+},
+{
+"question": "膀胱の直下に位置し、尿道を取り囲むように存在する男性の付属腺はどれか。",
+"options": [
+"精嚢",
+"尿道球腺（カウパー腺）",
+"前立腺",
+"精巣上体"
+],
+"answer": 2,
+"explanation": "前立腺は膀胱のすぐ下にあり、尿道をドーナツ状に取り囲んでいる。精液の成分となる前立腺液を分泌する。"
+},
+{
+"question": "生殖器の発生において、男性の精管や精嚢に分化する原基はどれか。",
+"options": [
+"中腎管（ウォルフ管）",
+"中腎傍管（ミュラー管）",
+"尿生殖洞",
+"生殖ヒダ"
+],
+"answer": 0,
+"explanation": "Y染色体が存在する場合、精巣から分泌されるホルモンの影響で中腎管（ウォルフ管）が発達し、精巣上体管、精管、精嚢になる。一方、女性の卵管や子宮の原基となるのは中腎傍管（ミュラー管）である。"
+},
+{
+"question": "骨盤を構成する骨として、適切でないものはどれか。",
+"options": [
+"寛骨",
+"仙骨",
+"尾骨",
+"大腿骨"
+],
+"answer": 3,
+"explanation": "骨盤は左右の寛骨、後方の仙骨、そして仙骨の下端にある尾骨によって構成される骨の輪である。大腿骨は寛骨臼と股関節を形成するが、骨盤自体の構成骨ではない。"
+},
+{
+"question": "骨盤の分界線より下方にあり、膀胱、子宮、直腸などの骨盤内臓器を収める領域はどれか。",
+"options": [
+"大骨盤",
+"小骨盤（真骨盤）",
+"骨盤下口",
+"寛骨臼"
+],
+"answer": 1,
+"explanation": "骨盤は分界線によって、上方の広い大骨盤（仮骨盤）と下方の狭い小骨盤（真骨盤）に分けられる。小骨盤は生殖器や膀胱、直腸などの重要な臓器を保護している。"
+},
+{
+"question": "骨盤の前方で、左右の寛骨（恥骨）が線維軟骨によって結合している部分はどれか。",
+"options": [
+"仙腸関節",
+"恥骨結合",
+"坐骨結節",
+"上前腸骨棘"
+],
+"answer": 1,
+"explanation": "恥骨結合は、左右の恥骨が線維軟骨によって結合している部分であり、骨盤の前壁を形成する。仙腸関節は骨盤の後方で仙骨と腸骨をつなぐ関節である。"
+},
+{
+"question": "下垂体後葉から分泌されるホルモンはどれか。",
+"options": [
+"プロラクチン",
+"成長ホルモン",
+"黄体形成ホルモン",
+"オキシトシン"
+],
+"answer": 3,
+"explanation": "下垂体後葉からはオキシトシン（子宮収縮・乳汁射出）とバソプレシン（抗利尿ホルモン）が分泌される。他の選択肢はすべて下垂体前葉から分泌されるホルモンである。"
+},
+{
+"question": "副腎皮質から分泌されるホルモンでないものはどれか。",
+"options": [
+"アルドステロン",
+"コルチゾール",
+"アンドロゲン",
+"メラトニン"
+],
+"answer": 3,
+"explanation": "アルドステロン、コルチゾール、アンドロゲンは副腎皮質から分泌されるステロイドホルモンである。メラトニンは松果体から分泌され、睡眠・概日リズムを調整する。"
+},
+{
+"question": "陰茎の勃起において、血液が流入して硬くなる海綿状の組織はどれか。",
+"options": [
+"精管と精索",
+"陰茎海綿体と尿道海綿体",
+"バックス筋膜と精巣挙筋",
+"曲精細管と精巣網"
+],
+"answer": 1,
+"explanation": "陰茎は、2本の陰茎海綿体と尿道を取り囲む1本の尿道海綿体という3つの勃起性組織から構成される。性的興奮時にこれらの海綿体に動脈血が充満することで勃起が起こる。"
+}
+]
+;
+
+      let currentQuestion = 0;
+    let score = 0;
+    let userAnswers = [];
+    let shuffledOptions = [];
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function loadQuestion() {
+      const question = quizData[currentQuestion];
+      document.getElementById('question').textContent = question.question;
+
+      shuffledOptions = shuffleArray([...question.options]);
+      const optionsHtml = shuffledOptions.map((option, index) => `
+        <div class="option" onclick="selectOption(${index})">${option}</div>
+      `).join('');
+
+      document.getElementById('options').innerHTML = optionsHtml;
+
+      // 解説のリセット
+      const explanationEl = document.getElementById('explanation');
+      explanationEl.style.opacity = '0';
+      explanationEl.style.display = 'none';
+    }
+
+    function selectOption(index) {
+  const options = document.querySelectorAll('.option');
+  if (options[index].classList.contains('disabled')) {
+    return;
+  }
+
+  // すべての選択肢を無効化
+  options.forEach(option => {
+    option.classList.add('disabled');
+  });
+
+  // 選択肢を選んだときに`selected`クラスを追加
+  options[index].classList.add('selected');
+
+  // 現在の問題を取得
+  const question = quizData[currentQuestion];
+  const selectedAnswerIndex = question.options.indexOf(shuffledOptions[index]);
+  userAnswers[currentQuestion] = selectedAnswerIndex;
+
+  // 解説の表示内容を設定
+  const explanationEl = document.getElementById('explanation');
+  explanationEl.innerHTML = `
+    <div class="explanation-header">
+      <span class="explanation-icon">💡</span>
+      解説
+    </div>
+    ${question.explanation}
+  `;
+  
+  // 一旦解説を見えないようにしてから表示の遅延を設定
+  explanationEl.style.opacity = '0';
+  explanationEl.style.display = 'block'; // まず表示を「block」にする
+
+  // 遅延を設定して解説をフェードイン
+  setTimeout(() => {
+    explanationEl.style.opacity = '1'; // 遅れてopacityを1にする
+  }, 200); // 200msの遅延を設定
+
+  // 正解・不正解のクラスを付与してグラデーションを適用
+  if (selectedAnswerIndex === question.answer) {
+    explanationEl.style.backgroundColor = '#e8f5e9';
+    explanationEl.style.borderLeftColor = '#4caf50';
+    options[index].classList.add('correct'); // 正解時に`correct`クラスを追加
+  } else {
+    explanationEl.style.backgroundColor = '#ffebee';
+    explanationEl.style.borderLeftColor = '#f44336';
+    options[index].classList.add('incorrect'); // 不正解時に`incorrect`クラスを追加
+  }
+}
+
+function loadQuestion() {
+  const question = quizData[currentQuestion];
+  document.getElementById('question').textContent = question.question;
+
+  shuffledOptions = shuffleArray([...question.options]);
+  const optionsHtml = shuffledOptions.map((option, index) => `
+    <div class="option" onclick="selectOption(${index})">${option}</div>
+  `).join('');
+
+  document.getElementById('options').innerHTML = optionsHtml;
+
+  // 解説のリセット
+  const explanationEl = document.getElementById('explanation');
+  explanationEl.style.display = 'none'; // 解説を非表示に
+  explanationEl.style.opacity = '0'; // 解説のopacityをリセット
+}
+
+function loadQuestion() {
+  const question = quizData[currentQuestion];
+  document.getElementById('question').textContent = question.question;
+
+  shuffledOptions = shuffleArray([...question.options]);
+  const optionsHtml = shuffledOptions.map((option, index) => `
+    <div class="option" onclick="selectOption(${index})">${option}</div>
+  `).join('');
+
+  document.getElementById('options').innerHTML = optionsHtml;
+
+  // 解説のリセット
+  const explanationEl = document.getElementById('explanation');
+  explanationEl.style.display = 'none'; // 解説を非表示に
+}
+    function nextQuestion() {
+      const selectedOption = document.querySelector('.option.selected');
+      if (selectedOption === null) {
+        alert('選択肢を選んでください');
+        return; 
+      }
+
+      if (currentQuestion < quizData.length - 1) {
+        currentQuestion++;
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      score = userAnswers.reduce((total, answer, index) => 
+        total + (answer === quizData[index].answer ? 1 : 0), 0);
+
+      const resultContainer = document.getElementById('result-container');
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.style.display = 'none';
+
+      const percentage = (score / quizData.length) * 100;
+      let resultHtml = `
+        <h2>クイズ結果</h2>
+        <p>正解数: ${score} / ${quizData.length}</p>
+        <p>正答率: ${percentage.toFixed(2)}%</p>
+      `;
+
+      quizData.forEach((question, index) => {
+        const isCorrect = userAnswers[index] === question.answer;
+        resultHtml += `
+          <div class="result-card">
+            <h3>問題 ${index + 1}</h3>
+            <p class="result-status ${isCorrect ? 'correct' : 'incorrect'}">
+              ${isCorrect ? '正解' : '不正解'}
+            </p>
+            <p><strong>質問:</strong> ${question.question}</p>
+            <p><strong>あなたの回答:</strong> ${question.options[userAnswers[index]] || '未回答'}</p>
+            <p><strong>正解:</strong> ${question.options[question.answer]}</p>
+            <p><strong>説明:</strong> ${question.explanation}</p>
+          </div>
+        `;
+      });
+
+      resultHtml += `<button class="nav-button" onclick="restartQuiz()">もう一度挑戦する</button>`;
+      resultContainer.innerHTML = resultHtml;
+
+      if (percentage === 100) {
+        const attendanceLink = document.getElementById('attendance-link');
+        attendanceLink.style.display = 'block';
+        attendanceLink.innerHTML = `
+          <p>おめでとうございます！全問正解です。</p>
+          <a href="https://forms.gle/TfKEUboYyrcm2JSz5"_blank">出席確認フォームに回答する</a>
+        `;
+      }
+    }
+
+    function restartQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      userAnswers = [];
+      shuffledOptions = [];
+      document.getElementById('quiz-container').style.display = 'block';
+      document.getElementById('result-container').innerHTML = '';
+      document.getElementById('attendance-link').style.display = 'none';
+      loadQuestion();
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
