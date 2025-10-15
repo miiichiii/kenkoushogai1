@@ -39,7 +39,7 @@
       width: 100%;
       background-color: rgba(255, 255, 255, 0.3);
       border-radius: 10px;
-      margin-bottom: 5px; /* マージン調整 */
+      margin-bottom: 5px;
       padding: 4px;
     }
     #progress-bar {
@@ -49,7 +49,6 @@
       border-radius: 6px;
       transition: width 0.4s ease-in-out;
     }
-    /* --- 進捗テキストとタイマーを横並びに --- */
     #progress-info {
       display: flex;
       justify-content: space-between;
@@ -176,6 +175,105 @@
       display: none;
     }
     #attendance-link a { color: white; text-decoration: none; font-weight: bold; }
+
+    /* ===== モダンな結果表示用CSS ===== */
+    #summary-card {
+      background: rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 25px;
+    }
+    .summary-grid {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+    .score-display {
+      display: grid;
+      place-items: center;
+    }
+    @property --p{
+      syntax: '<number>';
+      inherits: true;
+      initial-value: 0;
+    }
+    .score-circle {
+      --p: 20;
+      --b: 20px;
+      --c: #34c759;
+      --w: 180px;
+      width: var(--w);
+      aspect-ratio: 1;
+      position: relative;
+      display: inline-grid;
+      margin: 5px;
+      place-content: center;
+      font-size: 2.5em;
+      font-weight: bold;
+      animation: progress-load 1s 0.5s both;
+    }
+    .score-circle:before,
+    .score-circle:after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+    }
+    .score-circle:before {
+      inset: 0;
+      background:
+        radial-gradient(farthest-side, var(--c) 98%, #0000) top/var(--b) var(--b) no-repeat,
+        conic-gradient(var(--c) calc(var(--p) * 1%), #0000 0);
+      -webkit-mask: radial-gradient(farthest-side, #0000 calc(99% - var(--b)), #000 calc(100% - var(--b)));
+              mask: radial-gradient(farthest-side, #0000 calc(99% - var(--b)), #000 calc(100% - var(--b)));
+    }
+    .score-circle:after {
+      inset: calc(50% - var(--b) / 2);
+      background: var(--c);
+      transform: rotate(calc(var(--p) * 3.6deg)) translateY(calc(50% - var(--w) / 2));
+    }
+    @keyframes progress-load {
+      from { --p: 0; }
+    }
+    .score-percentage small {
+      font-size: 0.5em;
+      color: #555;
+    }
+    .stats-details {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      padding: 10px 15px;
+    }
+    .stat-icon {
+      font-size: 1.5em;
+      margin-right: 12px;
+    }
+    .stat-label {
+      font-size: 0.9em;
+      color: #333;
+      margin-right: auto;
+    }
+    .stat-value {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #000;
+    }
+    .feedback-message {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 1.1em;
+      font-weight: 500;
+      padding: 10px;
+      border-radius: 10px;
+      background-color: rgba(255, 255, 255, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -203,7 +301,6 @@
   
   <script>
     const originalQuizData = [
-      // ... (ここに元のquizDataの配列を貼り付け) ...
       { "question": "長期間にわたる高血圧の結果、心臓の壁が厚くなる現象を説明するのに最も適切な用語はどれですか？", "options": ["化生", "過形成", "肥大", "再生"], "answer": 2, "explanation": "高血圧という持続的な負荷に対し、心筋細胞一つひとつの容積が増大して対応するため、これは作業性肥大の典型例です。過形成は細胞数の増加を指します。" }, { "question": "喫煙者の気管支粘膜において、本来の線毛上皮が重層扁平上皮に置き換わることがあります。この現象を何と呼びますか？", "options": ["化生", "過形成", "変性", "萎縮"], "answer": 0, "explanation": "持続的な刺激（喫煙）に対応するため、より丈夫な細胞タイプに変化する現象であり、化生の典型例です。がんの母地となる可能性があります。" }, { "question": "免疫反応において、特定の抗原を記憶し、2回目以降の侵入に対して特異的かつ強力な反応を示す免疫はどれですか？", "options": ["自然免疫", "獲得免疫", "液性免疫", "細胞性免疫"], "answer": 1, "explanation": "一度侵入した異物を記憶し、次に備えるのは獲得免疫の特徴です。ワクチン接種はこの仕組みを利用しています。自然免疫は非特異的な反応です。" }, { "question": "体内に侵入した細菌などを捕食（貪食）し、その情報をヘルパーT細胞に伝える「抗原提示」の役割を担う細胞はどれですか？", "options": ["好中球", "B細胞", "マクロファージ", "NK細胞"], "answer": 2, "explanation": "マクロファージは強力な貪食作用を持ち、食べた異物の断片を細胞表面に出してT細胞に伝える、抗原提示の代表的な細胞です." }, { "question": "抗体を産生する形質細胞に分化し、液性免疫の中心的な役割を担うリンパ球はどれですか？", "options": ["ヘルパーT細胞", "キラーT細胞", "B細胞", "NK細胞"], "answer": 2, "explanation": "B細胞（Bリンパ球）は骨髄由来のリンパ球で、抗原の刺激を受けると抗体を大量に産生する「形質細胞」へと分化します。" }, { "question": "スギ花粉症などのアレルギー反応において、マスト細胞に結合してヒスタミンの放出を引き起こす主な抗体（免疫グロブリン）はどれですか？", "options": ["IgG", "IgA", "IgM", "IgE"], "answer": 3, "explanation": "IgEはマスト細胞や好塩基球の表面に結合します。アレルゲンが再侵入すると、マスト細胞からヒスタミンなどが放出され、即時型アレルギーが発症します。" }, { "question": "抗体の機能の一つである「オプソニン作用」について、最も適切な説明はどれですか？", "options": ["ウイルスに結合して無力化する作用", "細菌の細胞膜に穴を開けて破壊する作用", "細菌に付着し、マクロファージなどの食細胞が貪食しやすくする作用", "アレルギー反応を引き起こす作用"], "answer": 2, "explanation": "オプソニン作用とは、抗体が細菌などの異物に付着することで、マクロファージや好中球といった食細胞がその異物を認識し、貪食しやすくする働きのことです。" }, { "question": "大きな組織欠損を伴う創傷の治癒過程で形成され、最終的に瘢痕組織に置き換わる、血管に富んだ新しい結合組織を何と呼びますか？", "options": ["血餅", "肉芽組織", "ケロイド", "膿瘍"], "answer": 1, "explanation": "大きな組織欠損がある場合、治癒は二次治癒と呼ばれ、その過程で欠損部を埋めるために新生血管や線維芽細胞からなる肉芽組織が形成されます。" }, { "question": "ウイルス感染後の防御機構において、発熱を引き起こす直接的な原因物質はどれですか？", "options": ["抗体", "ヘルパーT細胞", "プロスタグランジン", "ヒスタミン"], "answer": 2, "explanation": "マクロファージなどが産生するサイトカイン（IL-1など）の刺激によりプロスタグランジンが産生され、これが脳の体温調節中枢に作用して発熱を引き起こします。" }, { "question": "唾液や母乳などの分泌液中に多く含まれ、消化管や気道といった粘膜表面での感染防御を担う免疫グロブリンはどれですか？", "options": ["IgG", "IgM", "IgD", "IgA"], "answer": 3, "explanation": "IgAは分泌液中に多く存在し、2量体を形成して粘膜免疫の主役となります。これにより、病原体が体内に侵入するのを防ぎます。" }, { "question": "細胞性免疫において、ウイルスに感染した細胞やがん細胞を直接攻撃して破壊する主役の細胞はどれですか？", "options": ["形質細胞", "キラーT細胞", "マスト細胞", "ヘルパーT細胞"], "answer": 1, "explanation": "キラーT細胞（細胞傷害性Tリンパ球）は、ウイルス感染細胞などが提示する抗原を認識し、その細胞を直接攻撃して破壊する細胞性免疫の実行部隊です。" }, { "question": "A型の血液型を持つ人にB型の血液を輸血した場合に起こる「不適合輸血」の反応メカニズムとして正しいものはどれですか？", "options": ["A型の抗B抗体が、輸血されたB型赤血球のB抗原と反応し、赤血球が凝集・破壊される。", "A型のA抗原が、輸血されたB型赤血球の抗A抗体と反応し、赤血球が凝集・破壊される。", "輸血されたB型赤血球のB抗原どうしが結合し、赤血球が凝集・破壊される。", "T細胞が輸血されたB型赤血球を異物と認識し、直接攻撃して破壊する。"], "answer": 0, "explanation": "A型の人は血漿中に抗B抗体を持っており、これがB型赤血球の表面にあるB抗原と結合することで、免疫反応（凝集、溶血）が引き起こされます。" }, { "question": "進行性筋ジストロフィー症で見られる、筋線維が脂肪組織に置き換わることで下腿が太く見える現象を何と呼びますか？", "options": ["作業性肥大", "代償性肥大", "仮性肥大", "過形成"], "answer": 2, "explanation": "仮性肥大は、本来の組織が萎縮・消失し、その隙間を脂肪組織や結合組織が埋めることで、外見上は容積が増大して見える状態です。" }, { "question": "一次免疫応答で最も早期に産生され、5量体構造を持つ特徴的な免疫グロブリンはどれですか？", "options": ["IgG", "IgA", "IgM", "IgE"], "answer": 2, "explanation": "IgMは抗原に初めて暴露された後に形質細胞から最初に分泌される抗体で、5量体の大きな構造を持ち、補体を活性化する能力が高いです。" }, { "question": "抗体が細菌と結合した後に活性化され、細菌の細胞膜に穴を開けて破壊する液性因子（タンパク質群）はどれですか？", "options": ["インターロイキン", "サイトカイン", "ヒスタミン", "補体"], "answer": 3, "explanation": "補体は、抗体が細菌に結合すると活性化され、連鎖的な反応（カスケード）を経て膜侵襲複合体を形成し、細菌の細胞膜に穴を開けて溶菌させます。" }, { "question": "自然免疫を担い、異物に対して非特異的に素早く反応する細胞の組み合わせとして最も適切なものはどれですか？", "options": ["T細胞、B細胞", "好中球、マクロファージ", "形質細胞、ヘルパーT細胞", "NK細胞、B細胞"], "answer": 1, "explanation": "自然免疫は生まれつき備わっている防御機構で、好中球、マクロファージ、マスト細胞などが異物を非特異的に攻撃します。T細胞とB細胞は獲得免疫の主役です。" }, { "question": "抗体のY字構造において、抗原と特異的に結合する部位はどこですか？", "options": ["定常領域", "可変領域", "重鎖のみ", "軽鎖のみ"], "answer": 1, "explanation": "抗体は重鎖と軽鎖からなり、Y字の先端部分にある可変領域が多様なアミノ酸配列を持つことで、様々な抗原と特異的に結合します。" }, { "question": "胃の粘膜が慢性的な刺激により腸の粘膜に似た細胞に変化する「腸上皮化生」は、どのような疾患の発生母地となる可能性がありますか？", "options": ["胃潰瘍", "胃がん", "逆流性食道炎", "急性胃炎"], "answer": 1, "explanation": "化生した組織は正常な組織と比べて不安定であり、がん化しやすい状態にあると考えられています。腸上皮化生は胃がんの発生母地となる可能性があります。" }, { "question": "ワクチンの一種である「不活化ワクチン」に関する説明として正しいものはどれですか？", "options": ["病原体の毒性を弱めて作られる。", "病原体の遺伝情報（mRNA）のみを利用する。", "熱や化学薬品で感染力を失わせた病原体から作られる。", "病原体の一部（スパイクタンパク質など）の遺伝子をプラスミドに組み込んで作られる。"], "answer": 2, "explanation": "不活化ワクチンは、ホルマリン処理などで病原体の感染性や毒性を完全になくし（不活化）、抗原としての性質だけを残して作製されます。毒性を弱めるのは生ワクチンです。" }, { "question": "母親から胎盤を通じて胎児に移行し、産まれたばかりの新生児を感染から守る唯一の免疫グロブリンはどれですか？", "options": ["IgA", "IgE", "IgM", "IgG"], "answer": 3, "explanation": "免疫グロブリンの中で分子量が比較的小さく、特殊な輸送機構を持つIgGのみが胎盤を通過することができます。これにより、新生児は母体由来の免疫を持って生まれてきます。" }
     ];
     
@@ -212,8 +309,6 @@
     let score = 0;
     let userAnswers = [];
     let shuffledOptions = [];
-    
-    // --- タイマー関連の変数 ---
     let timerInterval = null;
     let seconds = 0;
 
@@ -225,7 +320,6 @@
       return array;
     }
     
-    // --- タイマーを更新する関数 ---
     function updateTimer() {
       seconds++;
       const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
@@ -236,13 +330,10 @@
     function startQuiz() {
       quizData = shuffleArray([...originalQuizData]);
       userAnswers = new Array(quizData.length).fill(null);
-      
-      // --- タイマーのリセットと開始 ---
       seconds = 0;
       document.getElementById('timer').textContent = '00:00';
       if (timerInterval) clearInterval(timerInterval);
       timerInterval = setInterval(updateTimer, 1000);
-      
       loadQuestion();
     }
 
@@ -269,7 +360,6 @@
 
     function selectOption(element, selectedOptionText) {
       document.querySelectorAll('.option').forEach(option => option.classList.add('disabled'));
-
       element.classList.add('selected');
 
       const question = quizData[currentQuestion];
@@ -317,7 +407,6 @@
     }
 
     function showResult() {
-      // --- タイマーを停止 ---
       clearInterval(timerInterval);
       const finalTime = document.getElementById('timer').textContent;
 
@@ -327,6 +416,47 @@
 
       const percentage = (score / quizData.length) * 100;
       
+      let scoreColor;
+      let feedbackMessage;
+      if (percentage < 40) {
+        scoreColor = '#ff3b30';
+        feedbackMessage = 'お疲れ様でした！間違えた問題を中心にしっかり復習しましょう。';
+      } else if (percentage < 80) {
+        scoreColor = '#ff9500';
+        feedbackMessage = 'あと一歩！間違えた箇所を復習すれば、さらに実力がアップします。';
+      } else {
+        scoreColor = '#34c759';
+        feedbackMessage = '素晴らしい成績です！この調子で学習を続けましょう。';
+      }
+      if (percentage === 100) {
+        feedbackMessage = '完璧です！素晴らしい集中力と知識です。おめでとうございます！';
+      }
+
+      const summaryCardHtml = `
+        <div class="result-card" id="summary-card">
+          <div class="summary-grid">
+            <div class="score-display">
+              <div class="score-circle" style="--p:${percentage.toFixed(1)}; --c:'${scoreColor}';">
+                <span class="score-percentage">${Math.round(percentage)}<small>%</small></span>
+              </div>
+            </div>
+            <div class="stats-details">
+              <div class="stat-item">
+                <span class="stat-icon">✅</span>
+                <span class="stat-label">正解数</span>
+                <span class="stat-value">${score} / ${quizData.length}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-icon">⏱️</span>
+                <span class="stat-label">所要時間</span>
+                <span class="stat-value">${finalTime}</span>
+              </div>
+            </div>
+          </div>
+          <p class="feedback-message" style="color: ${scoreColor};">${feedbackMessage}</p>
+        </div>
+      `;
+
       const incorrectQuestions = [];
       quizData.forEach((question, index) => {
         if (userAnswers[index] !== question.answer) {
@@ -334,16 +464,12 @@
         }
       });
 
-      let resultHtml = `<h2>クイズ結果</h2>
-        <div class="result-card">
-          <p>正解数: ${score} / ${quizData.length}</p>
-          <p>正答率: ${percentage.toFixed(1)}%</p>
-          <p><strong>所要時間: ${finalTime}</strong></p> </div>`;
+      let resultHtml = `<h2>クイズ結果</h2>` + summaryCardHtml;
       
       if (incorrectQuestions.length > 0) {
         resultHtml += `
           <div id="incorrect-summary">
-            <h3>間違えた問題</h3>
+            <h3>要復習の問題</h3>
             ${incorrectQuestions.map(item => `<a href="#result-q-${item.number}">${item.number}</a>`).join('')}
           </div>
         `;
@@ -373,7 +499,7 @@
         const attendanceLink = document.getElementById('attendance-link');
         attendanceLink.style.display = 'block';
         attendanceLink.innerHTML = `
-          <p>素晴らしい！全問正解です。</p>
+          <p>おめでとうございます！全問正解です。</p>
           <a href="https://forms.gle/TfKEUboYyrcm2JSz5" target="_blank">出席確認フォームに回答する</a>
         `;
       }
