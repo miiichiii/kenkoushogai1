@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+  
+  <title>第2回確認テスト（健康障害１）</title>
+  <style>
+    :root {
+      --font-family-base: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --background-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      --accent-color-primary: #007aff;
+      --accent-color-gradient: linear-gradient(135deg, #007aff, #5ac8fa);
+      --correct-color-gradient: linear-gradient(135deg, #34c759, #a8e6cf);
+      --incorrect-color-gradient: linear-gradient(135deg, #ff3b30, #ff9a8b);
+      --card-bg-color: rgba(255, 255, 255, 0.25);
+      --card-border-color: rgba(255, 255, 255, 0.4);
+      --soft-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+      --strong-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    body {
+      font-family: var(--font-family-base);
+      font-weight: 500;
+      line-height: 1.7;
+      color: #333;
+      background: var(--background-gradient);
+      background-attachment: fixed;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-weight: 800;
+      font-size: 2.5em;
+      text-align: center;
+      color: white;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .quiz-container {
+      background-color: var(--card-bg-color);
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: var(--soft-shadow);
+      margin-bottom: 20px;
+      border: 1.5px solid var(--card-border-color);
+    }
+    #progress-container {
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.05);
+      border-radius: 10px;
+      margin-bottom: 5px;
+      padding: 4px;
+    }
+    #progress-bar {
+      height: 12px;
+      width: 0%;
+      background: var(--accent-color-gradient);
+      border-radius: 6px;
+      transition: width 0.5s ease-in-out;
+    }
+    #progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding: 0 5px;
+      font-weight: 700;
+      font-size: 1em;
+      color: #1d1d1f;
+    }
+    .question {
+      font-size: 1.5em;
+      font-weight: 700;
+      margin-bottom: 25px;
+      color: #1d1d1f;
+      line-height: 1.5;
+    }
+    .options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    .option {
+      background-color: rgba(255, 255, 255, 0.5);
+      border: 1.5px solid transparent;
+      border-radius: 16px;
+      padding: 18px;
+      font-size: 1.1em;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      /* --- マイクロインタラクションのためのtransition --- */
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.3s ease;
+    }
+    .option:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--soft-shadow);
+      border-color: var(--card-border-color);
+    }
+    .option.disabled { pointer-events: none; }
+    .option.correct {
+      background: var(--correct-color-gradient);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 8px 24px rgba(52, 199, 89, 0.3);
+    }
+    .option.incorrect {
+      background: var(--incorrect-color-gradient);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 8px 24px rgba(255, 59, 48, 0.3);
+    }
+    .explanation {
+      margin-top: 25px;
+      font-size: 1.05em;
+      background-color: rgba(255, 255, 255, 0.6);
+      border-left: 5px solid;
+      border-radius: 12px;
+      padding: 18px;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .explanation-header { display: flex; align-items: center; margin-bottom: 10px; font-weight: 700; }
+    .explanation-icon { font-size: 1.5em; margin-right: 10px; }
+    .nav-button {
+      background: var(--accent-color-gradient);
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      padding: 15px 24px;
+      font-size: 1.1em;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 25px;
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+    }
+    .nav-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0, 122, 255, 0.4);
+    }
+    .nav-button:disabled {
+      background: linear-gradient(135deg, #c7c7cc, #d1d1d6);
+      opacity: 0.7;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+    .nav-button:active {
+      transform: scale(0.97);
+      box-shadow: none;
+    }
+    /* --- 結果画面のスタイルも微調整 --- */
+    h2 { font-weight: 800; color: white; text-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .result-card, #incorrect-summary {
+        background-color: var(--card-bg-color);
+        backdrop-filter: blur(12px);
+        border: 1.5px solid var(--card-border-color);
+        border-radius: 24px;
+        box-shadow: var(--soft-shadow);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>第2回確認テスト</h1>
+    <div id="quiz-container" class="quiz-container">
+      <div id="progress-container">
+        <div id="progress-bar"></div>
+      </div>
+      <div id="progress-info">
+        <div id="progress-text"></div>
+        <div id="timer">00:00</div>
+      </div>
+      
+      <div id="quiz-content">
+        <div id="question" class="question"></div>
+        <div id="options" class="options"></div>
+        <div id="explanation" class="explanation"></div>
+      </div>
+      <button id="next" class="nav-button" onclick="nextQuestion()" disabled>次の問題</button>
+    </div>
+    <div id="result-container"></div>
+    <div id="attendance-link"></div>
+  </div>
+  
+  <script>
+    // --- 問題を2問に減らしました ---
+    const originalQuizData = [
+      { 
+        "question": "長期間にわたる高血圧の結果、心臓の壁が厚くなる現象を説明するのに最も適切な用語はどれですか？", 
+        "options": ["化生", "過形成", "肥大", "再生"], 
+        "answer": 2, 
+        "explanation": "高血圧という持続的な負荷に対し、心筋細胞一つひとつの容積が増大して対応するため、これは作業性肥大の典型例です。過形成は細胞数の増加を指します。" 
+      }, 
+      { 
+        "question": "免疫反応において、特定の抗原を記憶し、2回目以降の侵入に対して特異的かつ強力な反応を示す免疫はどれですか？", 
+        "options": ["自然免疫", "獲得免疫", "液性免疫", "細胞性免疫"], 
+        "answer": 1, 
+        "explanation": "一度侵入した異物を記憶し、次に備えるのは獲得免疫の特徴です。ワクチン接種はこの仕組みを利用しています。自然免疫は非特異的な反応です。" 
+      }
+    ];
+    
+    // --- 以下、JavaScriptのロジックは変更ありません ---
+    let quizData = [];
+    let currentQuestion = 0;
+    let score = 0;
+    let userAnswers = [];
+    let shuffledOptions = [];
+    let timerInterval = null;
+    let seconds = 0;
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+    
+    function updateTimer() {
+      seconds++;
+      const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const secs = String(seconds % 60).padStart(2, '0');
+      document.getElementById('timer').textContent = `${mins}:${secs}`;
+    }
+    
+    function startQuiz() {
+      quizData = shuffleArray([...originalQuizData]);
+      userAnswers = new Array(quizData.length).fill(null);
+      seconds = 0;
+      document.getElementById('timer').textContent = '00:00';
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(updateTimer, 1000);
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const progress = ((currentQuestion + 1) / quizData.length) * 100;
+      document.getElementById('progress-bar').style.width = `${progress}%`;
+      document.getElementById('progress-text').textContent = `${currentQuestion + 1} / ${quizData.length} 問`;
+      const question = quizData[currentQuestion];
+      document.getElementById('question').textContent = question.question;
+      shuffledOptions = shuffleArray([...question.options]);
+      const optionsHtml = shuffledOptions.map(option => `
+        <div class="option" onclick="selectOption(this, '${option}')">${option}</div>
+      `).join('');
+      document.getElementById('options').innerHTML = optionsHtml;
+      const explanationEl = document.getElementById('explanation');
+      explanationEl.style.display = 'none';
+      explanationEl.style.opacity = '0';
+      document.getElementById('next').disabled = true;
+    }
+
+    function selectOption(element, selectedOptionText) {
+      document.querySelectorAll('.option').forEach(option => option.classList.add('disabled'));
+      element.classList.add('selected');
+      const question = quizData[currentQuestion];
+      const selectedAnswerIndex = question.options.indexOf(selectedOptionText);
+      userAnswers[currentQuestion] = selectedAnswerIndex;
+      const isCorrect = selectedAnswerIndex === question.answer;
+      if (isCorrect) {
+        element.classList.add('correct');
+        score++;
+      } else {
+        element.classList.add('incorrect');
+        const correctAnswerText = question.options[question.answer];
+        document.querySelectorAll('.option').forEach(opt => {
+          if (opt.textContent === correctAnswerText) {
+            opt.classList.add('correct');
+          }
+        });
+      }
+      const explanationEl = document.getElementById('explanation');
+      explanationEl.innerHTML = `
+        <div class="explanation-header" style="color: ${isCorrect ? '#34c759' : '#ff3b30'};">
+          <span class="explanation-icon">💡</span>
+          解説
+        </div>
+        ${question.explanation}
+      `;
+      explanationEl.style.borderLeftColor = isCorrect ? '#34c759' : '#ff3b30';
+      explanationEl.style.display = 'block';
+      setTimeout(() => { explanationEl.style.opacity = '1'; }, 100);
+      document.getElementById('next').disabled = false;
+    }
+
+    function nextQuestion() {
+      if (currentQuestion < quizData.length - 1) {
+        currentQuestion++;
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+        // (結果表示のロジックは省略しますが、以前のコードのまま動作します)
+        // ... (以前のモダンな結果表示のshowResult関数をここにペースト) ...
+        clearInterval(timerInterval);const finalTime=document.getElementById("timer").textContent;const resultContainer=document.getElementById("result-container");const quizContainer=document.getElementById("quiz-container");quizContainer.style.display="none";const percentage=(score/quizData.length)*100;let scoreColor;let feedbackMessage;if(percentage<40){scoreColor="#ff3b30";feedbackMessage="お疲れ様でした！間違えた問題を中心にしっかり復習しましょう。"}else if(percentage<80){scoreColor="#ff9500";feedbackMessage="あと一歩！間違えた箇所を復習すれば、さらに実力がアップします。"}else{scoreColor="#34c759";feedbackMessage="素晴らしい成績です！この調子で学習を続けましょう。"}if(percentage===100){feedbackMessage="完璧です！素晴らしい集中力と知識です。おめでとうございます！"}const summaryCardHtml=`<div class="result-card" id="summary-card"><div class="summary-grid"><div class="score-display"><div class="score-circle" style="--p:${percentage.toFixed(1)}; --c:'${scoreColor}';"><span class="score-percentage">${Math.round(percentage)}<small>%</small></span></div></div><div class="stats-details"><div class="stat-item"><span class="stat-icon">✅</span><span class="stat-label">正解数</span><span class="stat-value">${score} / ${quizData.length}</span></div><div class="stat-item"><span class="stat-icon">⏱️</span><span class="stat-label">所要時間</span><span class="stat-value">${finalTime}</span></div></div></div><p class="feedback-message" style="color: ${scoreColor};">${feedbackMessage}</p></div>`;const incorrectQuestions=[];quizData.forEach((question,index)=>{if(userAnswers[index]!==question.answer){incorrectQuestions.push({number:index+1})}});let resultHtml=`<h2>クイズ結果</h2>`+summaryCardHtml;if(incorrectQuestions.length>0){resultHtml+=`<div id="incorrect-summary"><h3>要復習の問題</h3>${incorrectQuestions.map(item=>`<a href="#result-q-${item.number}">${item.number}</a>`).join("")}</div>`}quizData.forEach((question,index)=>{const userAnswerIndex=userAnswers[index];const isCorrect=userAnswerIndex===question.answer;resultHtml+=`<div class="result-card" id="result-q-${index+1}"><h3>問題 ${index+1}</h3><p class="result-status ${isCorrect?"correct":"incorrect"}">${isCorrect?"正解":"不正解"}</p><p><strong>質問:</strong> ${question.question}</p><p><strong>あなたの回答:</strong> ${userAnswerIndex!==null?question.options[userAnswerIndex]:"未回答"}</p><p><strong>正解:</strong> ${question.options[question.answer]}</p><p><strong>説明:</strong> ${question.explanation}</p></div>`});resultHtml+=`<button class="nav-button" onclick="restartQuiz()">もう一度挑戦する</button>`;resultContainer.innerHTML=resultHtml;if(percentage===100){const attendanceLink=document.getElementById("attendance-link");attendanceLink.style.display="block";attendanceLink.innerHTML=`<p>おめでとうございます！全問正解です。</p><a href="https://forms.gle/TfKEUboYyrcm2JSz5" target="_blank">出席確認フォームに回答する</a>`}
+    }
+
+    function restartQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      document.getElementById('quiz-container').style.display = 'block';
+      document.getElementById('result-container').innerHTML = '';
+      document.getElementById('attendance-link').style.display = 'none';
+      startQuiz();
+    }
+
+    startQuiz();
+  </script>
+</body>
+</html>
