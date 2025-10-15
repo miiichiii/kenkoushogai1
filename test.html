@@ -5,66 +5,136 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <title>第2回確認テスト（健康障害１）</title>
   <style>
     :root {
-      --font-family-base: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --background-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      --accent-color-primary: #007aff;
-      --accent-color-gradient: linear-gradient(135deg, #007aff, #5ac8fa);
-      --correct-color-gradient: linear-gradient(135deg, #34c759, #a8e6cf);
-      --incorrect-color-gradient: linear-gradient(135deg, #ff3b30, #ff9a8b);
-      --card-bg-color: rgba(255, 255, 255, 0.25);
-      --card-border-color: rgba(255, 255, 255, 0.4);
-      --soft-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-      --strong-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+      --font-family-base: 'Montserrat', sans-serif;
+      --base-text-color: #e0e0e0;
+      --main-bg-gradient: linear-gradient(135deg, #4a75e0, #80e0cf);
+      --card-bg-blur: rgba(255, 255, 255, 0.1);
+      --card-border-color: rgba(255, 255, 255, 0.3);
+      --card-inner-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
+      --card-outer-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+      --progress-bar-gradient: linear-gradient(90deg, #6a82fb, #fc5c7d);
+      --button-gradient: linear-gradient(135deg, #80e0cf, #4a75e0);
+      --button-hover-gradient: linear-gradient(135deg, #a0eacf, #6090e0);
+      --correct-gradient: linear-gradient(135deg, #27ae60, #2ecc71);
+      --incorrect-gradient: linear-gradient(135deg, #e74c3c, #c0392b);
     }
 
     body {
       font-family: var(--font-family-base);
       font-weight: 500;
       line-height: 1.7;
-      color: #333;
-      background: var(--background-gradient);
-      background-attachment: fixed;
+      color: var(--base-text-color);
+      background: var(--main-bg-gradient);
+      overflow: hidden; /* 背景アニメーションのため */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
       margin: 0;
+      position: relative;
     }
+
+    /* --- リキッド背景シェイプアニメーション --- */
+    .liquid-shape {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.1);
+      filter: blur(80px); /* ぼかしを強くして液体感を出す */
+      border-radius: 50%;
+      opacity: 0.7;
+      animation: liquidFlow 15s ease-in-out infinite alternate;
+      z-index: -1;
+    }
+    .liquid-shape:nth-child(1) { top: 10%; left: 5%; width: 200px; height: 200px; animation-delay: 0s; background: rgba(170, 250, 250, 0.2); }
+    .liquid-shape:nth-child(2) { bottom: 20%; right: 10%; width: 250px; height: 250px; animation-delay: 3s; background: rgba(250, 170, 250, 0.2); }
+    .liquid-shape:nth-child(3) { top: 30%; right: 15%; width: 180px; height: 180px; animation-delay: 6s; background: rgba(250, 250, 170, 0.2); }
+    .liquid-shape:nth-child(4) { bottom: 5%; left: 25%; width: 300px; height: 300px; animation-delay: 9s; background: rgba(170, 250, 170, 0.2); }
+
+    @keyframes liquidFlow {
+      0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 0.7; }
+      25% { transform: translate(20px, -30px) scale(1.1) rotate(45deg); opacity: 0.8; }
+      50% { transform: translate(-15px, 20px) scale(0.95) rotate(90deg); opacity: 0.6; }
+      75% { transform: translate(25px, 10px) scale(1.05) rotate(135deg); opacity: 0.75; }
+      100% { transform: translate(0, 0) scale(1) rotate(180deg); opacity: 0.7; }
+    }
+
     .container {
       max-width: 800px;
-      margin: 0 auto;
+      width: 100%;
+      margin: auto; /* flexboxで中央寄せ */
+      position: relative; /* z-indexが有効になるように */
+      z-index: 10;
     }
     h1 {
-      font-weight: 800;
-      font-size: 2.5em;
+      font-weight: 700;
+      font-size: 2.8em;
       text-align: center;
       color: white;
-      text-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      margin-bottom: 40px;
+      letter-spacing: 0.05em;
     }
-    .quiz-container {
-      background-color: var(--card-bg-color);
-      backdrop-filter: blur(12px);
-      border-radius: 24px;
-      padding: 30px;
-      box-shadow: var(--soft-shadow);
-      margin-bottom: 20px;
-      border: 1.5px solid var(--card-border-color);
+    h2 {
+      font-weight: 700;
+      font-size: 2.2em;
+      color: white;
+      text-shadow: 0 3px 10px rgba(0,0,0,0.3);
+      margin-bottom: 30px;
     }
+    .quiz-container, .result-card {
+      background-color: var(--card-bg-blur);
+      backdrop-filter: blur(25px) saturate(180%); /* ぼかしを強く、彩度を上げてガラス感 */
+      border-radius: 30px;
+      padding: 35px;
+      box-shadow: var(--card-outer-shadow), var(--card-inner-shadow);
+      margin-bottom: 25px;
+      border: 1px solid var(--card-border-color);
+      position: relative; /* ホログラフィックエフェクトの基準 */
+      overflow: hidden; /* エフェクトがはみ出さないように */
+    }
+
+    /* --- ホログラフィック・エフェクト（擬似要素で光の反射を表現） --- */
+    .quiz-container::before, .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0) 30%,
+        rgba(255, 255, 255, 0.15) 50%,
+        rgba(255, 255, 255, 0) 70%
+      );
+      transform: translateX(-100%) skewX(-30deg);
+      transition: transform 0.8s ease-out;
+      pointer-events: none; /* クリックを邪魔しない */
+    }
+    /* ホバー時に光が走る */
+    .quiz-container:hover::before, .result-card:hover::before {
+      transform: translateX(100%) skewX(-30deg);
+    }
+    
     #progress-container {
       width: 100%;
-      background-color: rgba(0, 0, 0, 0.05);
+      background-color: rgba(255, 255, 255, 0.15);
       border-radius: 10px;
-      margin-bottom: 5px;
-      padding: 4px;
+      margin-bottom: 10px;
+      height: 10px;
     }
     #progress-bar {
-      height: 12px;
+      height: 100%;
       width: 0%;
-      background: var(--accent-color-gradient);
-      border-radius: 6px;
-      transition: width 0.5s ease-in-out;
+      background: var(--progress-bar-gradient);
+      border-radius: 10px;
+      transition: width 0.6s ease-out;
     }
     #progress-info {
       display: flex;
@@ -72,107 +142,293 @@
       align-items: center;
       margin-bottom: 30px;
       padding: 0 5px;
-      font-weight: 700;
-      font-size: 1em;
-      color: #1d1d1f;
+      font-weight: 600;
+      font-size: 1.0em;
+      color: var(--base-text-color);
     }
     .question {
-      font-size: 1.5em;
-      font-weight: 700;
-      margin-bottom: 25px;
-      color: #1d1d1f;
+      font-size: 1.6em;
+      font-weight: 600;
+      margin-bottom: 30px;
+      color: white;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
       line-height: 1.5;
     }
     .options {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
     }
     .option {
-      background-color: rgba(255, 255, 255, 0.5);
-      border: 1.5px solid transparent;
-      border-radius: 16px;
-      padding: 18px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      padding: 20px;
       font-size: 1.1em;
       font-weight: 500;
+      color: var(--base-text-color);
       cursor: pointer;
       text-align: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      /* --- マイクロインタラクションのためのtransition --- */
-      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.3s ease;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.25s ease-out;
+      position: relative;
+      overflow: hidden;
     }
     .option:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.6);
       transform: translateY(-5px);
-      box-shadow: var(--soft-shadow);
-      border-color: var(--card-border-color);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
-    .option.disabled { pointer-events: none; }
+    .option.selected {
+      color: white;
+      font-weight: 600;
+      background-color: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.8);
+      transform: scale(1.02); /* 選ばれたら少しだけ拡大 */
+    }
+    .option.disabled { pointer-events: none; opacity: 0.8; }
     .option.correct {
-      background: var(--correct-color-gradient);
-      color: #fff;
-      font-weight: 700;
-      box-shadow: 0 8px 24px rgba(52, 199, 89, 0.3);
+      background: var(--correct-gradient);
+      border-color: rgba(46, 204, 113, 0.8);
+      box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
     }
     .option.incorrect {
-      background: var(--incorrect-color-gradient);
-      color: #fff;
-      font-weight: 700;
-      box-shadow: 0 8px 24px rgba(255, 59, 48, 0.3);
+      background: var(--incorrect-gradient);
+      border-color: rgba(231, 76, 60, 0.8);
+      box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
     }
+    
+    /* 正解/不正解時の光の歪みエフェクト */
+    .option.selected::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
+      transform: scale(0);
+      animation: ripple 0.6s forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      to { transform: scale(1); opacity: 0; }
+    }
+
+
     .explanation {
-      margin-top: 25px;
+      margin-top: 30px;
       font-size: 1.05em;
-      background-color: rgba(255, 255, 255, 0.6);
+      color: white;
+      background-color: rgba(255, 255, 255, 0.15);
       border-left: 5px solid;
-      border-radius: 12px;
-      padding: 18px;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
       display: none;
       opacity: 0;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.5s ease-in-out;
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    .explanation-header { display: flex; align-items: center; margin-bottom: 10px; font-weight: 700; }
-    .explanation-icon { font-size: 1.5em; margin-right: 10px; }
+    .explanation-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      font-weight: 700;
+      font-size: 1.2em;
+      color: #e0e0e0;
+    }
+    .explanation-icon { font-size: 1.6em; margin-right: 12px; }
     .nav-button {
-      background: var(--accent-color-gradient);
-      color: #fff;
+      background: var(--button-gradient);
+      color: white;
       border: none;
-      border-radius: 16px;
-      padding: 15px 24px;
-      font-size: 1.1em;
+      border-radius: 20px;
+      padding: 16px 30px;
+      font-size: 1.2em;
       font-weight: 700;
       cursor: pointer;
-      margin-top: 25px;
+      margin-top: 30px;
       width: 100%;
-      box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3);
-      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      transition: all 0.25s ease-out;
+      letter-spacing: 0.05em;
     }
     .nav-button:hover {
+      background: var(--button-hover-gradient);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
       transform: translateY(-3px);
-      box-shadow: 0 12px 30px rgba(0, 122, 255, 0.4);
     }
     .nav-button:disabled {
-      background: linear-gradient(135deg, #c7c7cc, #d1d1d6);
-      opacity: 0.7;
+      background: linear-gradient(135deg, #a0a0a0, #c0c0c0);
+      opacity: 0.6;
       cursor: not-allowed;
       box-shadow: none;
       transform: none;
     }
     .nav-button:active {
-      transform: scale(0.97);
-      box-shadow: none;
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
-    /* --- 結果画面のスタイルも微調整 --- */
-    h2 { font-weight: 800; color: white; text-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .result-card, #incorrect-summary {
-        background-color: var(--card-bg-color);
-        backdrop-filter: blur(12px);
-        border: 1.5px solid var(--card-border-color);
-        border-radius: 24px;
-        box-shadow: var(--soft-shadow);
+
+    /* --- 結果画面のスタイル --- */
+    #summary-card, .result-card {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 30px;
+      border-radius: 25px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+      backdrop-filter: blur(20px) saturate(150%);
+      color: white;
     }
+    .summary-grid {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    .score-display {
+      display: grid;
+      place-items: center;
+    }
+    @property --p{
+      syntax: '<number>';
+      inherits: true;
+      initial-value: 0;
+    }
+    .score-circle {
+      --p: 20;
+      --b: 25px;
+      --c: #34c759;
+      --w: 200px;
+      width: var(--w);
+      aspect-ratio: 1;
+      position: relative;
+      display: inline-grid;
+      margin: 5px;
+      place-content: center;
+      font-size: 3em;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      animation: progress-load 1.2s 0.5s both;
+    }
+    .score-circle:before,
+    .score-circle:after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+    }
+    .score-circle:before {
+      inset: 0;
+      background:
+        radial-gradient(farthest-side, var(--c) 98%, #0000) top/var(--b) var(--b) no-repeat,
+        conic-gradient(var(--c) calc(var(--p) * 1%), rgba(255,255,255,0.2) 0);
+      -webkit-mask: radial-gradient(farthest-side, #0000 calc(99% - var(--b)), #000 calc(100% - var(--b)));
+              mask: radial-gradient(farthest-side, #0000 calc(99% - var(--b)), #000 calc(100% - var(--b)));
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .score-circle:after {
+      inset: calc(50% - var(--b) / 2);
+      background: var(--c);
+      transform: rotate(calc(var(--p) * 3.6deg)) translateY(calc(50% - var(--w) / 2));
+    }
+    @keyframes progress-load {
+      from { --p: 0; }
+    }
+    .score-percentage small {
+      font-size: 0.5em;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .stats-details {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 12px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .stat-icon {
+      font-size: 1.8em;
+      margin-right: 15px;
+      color: #80e0cf;
+    }
+    .stat-label {
+      font-size: 1.0em;
+      color: rgba(255, 255, 255, 0.8);
+      margin-right: auto;
+    }
+    .stat-value {
+      font-size: 1.4em;
+      font-weight: 700;
+      color: white;
+    }
+    .feedback-message {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 1.2em;
+      font-weight: 600;
+      padding: 15px;
+      border-radius: 15px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      text-shadow: 0 1px 5px rgba(0,0,0,0.2);
+    }
+    #incorrect-summary {
+      background-color: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      padding: 20px;
+      margin-top: 25px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+    #incorrect-summary h3 { margin-top: 0; color: white; font-weight: 700; }
+    #incorrect-summary a {
+      display: inline-block;
+      margin: 8px;
+      padding: 8px 15px;
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      transition: all 0.2s ease-out;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    #incorrect-summary a:hover {
+      background: linear-gradient(135deg, #c0392b, #a0291b);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    }
+    #attendance-link {
+      background: linear-gradient(135deg, #27ae60, #2ecc71);
+      color: white;
+      padding: 20px;
+      border-radius: 20px;
+      margin-top: 25px;
+      text-align: center;
+      display: none;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    #attendance-link a { color: white; text-decoration: none; font-weight: 700; font-size: 1.1em; }
+    #attendance-link p { margin-bottom: 10px; font-size: 1.1em; }
   </style>
 </head>
 <body>
+  <div class="liquid-shape"></div>
+  <div class="liquid-shape"></div>
+  <div class="liquid-shape"></div>
+  <div class="liquid-shape"></div>
+
   <div class="container">
     <h1>第2回確認テスト</h1>
     <div id="quiz-container" class="quiz-container">
@@ -266,6 +522,13 @@
     function selectOption(element, selectedOptionText) {
       document.querySelectorAll('.option').forEach(option => option.classList.add('disabled'));
       element.classList.add('selected');
+
+      // リップルエフェクトを再生
+      const ripple = document.createElement('span');
+      ripple.classList.add('ripple');
+      element.appendChild(ripple);
+
+
       const question = quizData[currentQuestion];
       const selectedAnswerIndex = question.options.indexOf(selectedOptionText);
       userAnswers[currentQuestion] = selectedAnswerIndex;
@@ -273,6 +536,7 @@
       if (isCorrect) {
         element.classList.add('correct');
         score++;
+        element.style.borderColor = 'rgba(46, 204, 113, 0.8)'; // 正解色でボーダーを強調
       } else {
         element.classList.add('incorrect');
         const correctAnswerText = question.options[question.answer];
@@ -281,16 +545,17 @@
             opt.classList.add('correct');
           }
         });
+        element.style.borderColor = 'rgba(231, 76, 60, 0.8)'; // 不正解色でボーダーを強調
       }
       const explanationEl = document.getElementById('explanation');
       explanationEl.innerHTML = `
-        <div class="explanation-header" style="color: ${isCorrect ? '#34c759' : '#ff3b30'};">
+        <div class="explanation-header" style="color: ${isCorrect ? '#2ecc71' : '#e74c3c'};">
           <span class="explanation-icon">💡</span>
           解説
         </div>
         ${question.explanation}
       `;
-      explanationEl.style.borderLeftColor = isCorrect ? '#34c759' : '#ff3b30';
+      explanationEl.style.borderLeftColor = isCorrect ? '#2ecc71' : '#e74c3c';
       explanationEl.style.display = 'block';
       setTimeout(() => { explanationEl.style.opacity = '1'; }, 100);
       document.getElementById('next').disabled = false;
@@ -306,9 +571,102 @@
     }
 
     function showResult() {
-        // (結果表示のロジックは省略しますが、以前のコードのまま動作します)
-        // ... (以前のモダンな結果表示のshowResult関数をここにペースト) ...
-        clearInterval(timerInterval);const finalTime=document.getElementById("timer").textContent;const resultContainer=document.getElementById("result-container");const quizContainer=document.getElementById("quiz-container");quizContainer.style.display="none";const percentage=(score/quizData.length)*100;let scoreColor;let feedbackMessage;if(percentage<40){scoreColor="#ff3b30";feedbackMessage="お疲れ様でした！間違えた問題を中心にしっかり復習しましょう。"}else if(percentage<80){scoreColor="#ff9500";feedbackMessage="あと一歩！間違えた箇所を復習すれば、さらに実力がアップします。"}else{scoreColor="#34c759";feedbackMessage="素晴らしい成績です！この調子で学習を続けましょう。"}if(percentage===100){feedbackMessage="完璧です！素晴らしい集中力と知識です。おめでとうございます！"}const summaryCardHtml=`<div class="result-card" id="summary-card"><div class="summary-grid"><div class="score-display"><div class="score-circle" style="--p:${percentage.toFixed(1)}; --c:'${scoreColor}';"><span class="score-percentage">${Math.round(percentage)}<small>%</small></span></div></div><div class="stats-details"><div class="stat-item"><span class="stat-icon">✅</span><span class="stat-label">正解数</span><span class="stat-value">${score} / ${quizData.length}</span></div><div class="stat-item"><span class="stat-icon">⏱️</span><span class="stat-label">所要時間</span><span class="stat-value">${finalTime}</span></div></div></div><p class="feedback-message" style="color: ${scoreColor};">${feedbackMessage}</p></div>`;const incorrectQuestions=[];quizData.forEach((question,index)=>{if(userAnswers[index]!==question.answer){incorrectQuestions.push({number:index+1})}});let resultHtml=`<h2>クイズ結果</h2>`+summaryCardHtml;if(incorrectQuestions.length>0){resultHtml+=`<div id="incorrect-summary"><h3>要復習の問題</h3>${incorrectQuestions.map(item=>`<a href="#result-q-${item.number}">${item.number}</a>`).join("")}</div>`}quizData.forEach((question,index)=>{const userAnswerIndex=userAnswers[index];const isCorrect=userAnswerIndex===question.answer;resultHtml+=`<div class="result-card" id="result-q-${index+1}"><h3>問題 ${index+1}</h3><p class="result-status ${isCorrect?"correct":"incorrect"}">${isCorrect?"正解":"不正解"}</p><p><strong>質問:</strong> ${question.question}</p><p><strong>あなたの回答:</strong> ${userAnswerIndex!==null?question.options[userAnswerIndex]:"未回答"}</p><p><strong>正解:</strong> ${question.options[question.answer]}</p><p><strong>説明:</strong> ${question.explanation}</p></div>`});resultHtml+=`<button class="nav-button" onclick="restartQuiz()">もう一度挑戦する</button>`;resultContainer.innerHTML=resultHtml;if(percentage===100){const attendanceLink=document.getElementById("attendance-link");attendanceLink.style.display="block";attendanceLink.innerHTML=`<p>おめでとうございます！全問正解です。</p><a href="https://forms.gle/TfKEUboYyrcm2JSz5" target="_blank">出席確認フォームに回答する</a>`}
+      clearInterval(timerInterval);
+      const finalTime = document.getElementById('timer').textContent;
+
+      const resultContainer = document.getElementById('result-container');
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.style.display = 'none';
+
+      const percentage = (score / quizData.length) * 100;
+      
+      let scoreColor;
+      let feedbackMessage;
+      if (percentage < 40) {
+        scoreColor = '#e74c3c'; /* incorrect-gradientのベースカラー */
+        feedbackMessage = 'お疲れ様でした！間違えた問題を中心にしっかり復習しましょう。';
+      } else if (percentage < 80) {
+        scoreColor = '#f39c12'; /* オレンジ系 */
+        feedbackMessage = 'あと一歩！間違えた箇所を復習すれば、さらに実力がアップします。';
+      } else {
+        scoreColor = '#2ecc71'; /* correct-gradientのベースカラー */
+        feedbackMessage = '素晴らしい成績です！この調子で学習を続けましょう。';
+      }
+      if (percentage === 100) {
+        feedbackMessage = '完璧です！素晴らしい集中力と知識です。おめでとうございます！';
+      }
+
+      const summaryCardHtml = `
+        <div class="result-card" id="summary-card">
+          <div class="summary-grid">
+            <div class="score-display">
+              <div class="score-circle" style="--p:${percentage.toFixed(1)}; --c:'${scoreColor}';">
+                <span class="score-percentage">${Math.round(percentage)}<small>%</small></span>
+              </div>
+            </div>
+            <div class="stats-details">
+              <div class="stat-item">
+                <span class="stat-icon">✅</span>
+                <span class="stat-label">正解数</span>
+                <span class="stat-value">${score} / ${quizData.length}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-icon">⏱️</span>
+                <span class="stat-label">所要時間</span>
+                <span class="stat-value">${finalTime}</span>
+              </div>
+            </div>
+          </div>
+          <p class="feedback-message" style="color: ${scoreColor};">${feedbackMessage}</p>
+        </div>
+      `;
+
+      const incorrectQuestions = [];
+      quizData.forEach((question, index) => {
+        if (userAnswers[index] !== question.answer) {
+          incorrectQuestions.push({ number: index + 1 });
+        }
+      });
+
+      let resultHtml = `<h2>クイズ結果</h2>` + summaryCardHtml;
+      
+      if (incorrectQuestions.length > 0) {
+        resultHtml += `
+          <div id="incorrect-summary">
+            <h3>要復習の問題</h3>
+            ${incorrectQuestions.map(item => `<a href="#result-q-${item.number}">${item.number}</a>`).join('')}
+          </div>
+        `;
+      }
+
+      quizData.forEach((question, index) => {
+        const userAnswerIndex = userAnswers[index];
+        const isCorrect = userAnswerIndex === question.answer;
+        resultHtml += `
+          <div class="result-card" id="result-q-${index + 1}">
+            <h3>問題 ${index + 1}</h3>
+            <p class="result-status" style="color: ${isCorrect ? '#2ecc71' : '#e74c3c'};">
+              ${isCorrect ? '正解' : '不正解'}
+            </p>
+            <p><strong>質問:</strong> ${question.question}</p>
+            <p><strong>あなたの回答:</strong> ${userAnswerIndex !== null ? question.options[userAnswerIndex] : '未回答'}</p>
+            <p><strong>正解:</strong> ${question.options[question.answer]}</p>
+            <p><strong>説明:</strong> ${question.explanation}</p>
+          </div>
+        `;
+      });
+
+      resultHtml += `<button class="nav-button" onclick="restartQuiz()">もう一度挑戦する</button>`;
+      resultContainer.innerHTML = resultHtml;
+
+      if (percentage === 100) {
+        const attendanceLink = document.getElementById('attendance-link');
+        attendanceLink.style.display = 'block';
+        attendanceLink.innerHTML = `
+          <p>おめでとうございます！全問正解です。</p>
+          <a href="https://forms.gle/TfKEUboYyrcm2JSz5" target="_blank">出席確認フォームに回答する</a>
+        `;
+      }
     }
 
     function restartQuiz() {
