@@ -1,739 +1,739 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>第3回確認テスト（健康障害１）</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      line-height: 1.6;
-      color: #333;
-      background: linear-gradient(135deg, #a8edea, #fed6e3);
-      background-size: cover;  
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-      padding: 20px;
-      margin: 0;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    h1, h2 {
-      font-family: 'Noto Sans JP', sans-serif;
-      font-weight: 700;
-      text-align: center;
-    }
-    .quiz-container, .result-card {
-      background-color: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-      margin-bottom: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    #progress-container {
-      width: 100%;
-      background-color: rgba(255, 255, 255, 0.3);
-      border-radius: 10px;
-      margin-bottom: 5px;
-      padding: 4px;
-    }
-    #progress-bar {
-      height: 12px;
-      width: 0%;
-      background: linear-gradient(135deg, #007aff, #5ac8fa);
-      border-radius: 6px;
-      transition: width 0.4s ease-in-out;
-    }
-    #progress-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding: 0 5px;
-      font-weight: bold;
-      font-size: 0.9em;
-      color: #1d1d1f;
-    }
-    .question {
-      font-size: 1.3em;
-      margin-bottom: 20px;
-      color: #1d1d1f;
-    }
-    .options {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-    }
-    .option {
-      background-color: rgba(255, 255, 255, 0.7);
-      border: none;
-      border-radius: 16px;
-      padding: 15px;
-      font-size: 1em;
-      cursor: pointer;
-      transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .option:hover {
-      background-color: rgba(255, 255, 255, 1);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-      transform: translateY(-2px);
-    }
-    .option.selected { color: #fff; }
-    .option.disabled { pointer-events: none; }
-    .option.correct {
-      background: linear-gradient(135deg, #34c759, #a8e6cf);
-      color: #fff;
-    }
-    .option.incorrect {
-      background: linear-gradient(135deg, #ff3b30, #ff9a8b);
-      color: #fff;
-    }
-    .explanation {
-      margin-top: 20px;
-      font-size: 1em;
-      color: #333;
-      background-color: rgba(255, 255, 255, 0.8);
-      border-left: 5px solid;
-      border-radius: 12px;
-      padding: 15px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      display: none;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-    .explanation-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-      font-weight: bold;
-    }
-    .explanation-icon { font-size: 1.5em; margin-right: 10px; }
-    .nav-button {
-      background: linear-gradient(135deg, #007aff, #5ac8fa);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 12px 24px;
-      font-size: 1em;
-      cursor: pointer;
-      transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease, opacity 0.3s ease;
-      margin-top: 20px;
-      width: 100%;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .nav-button:hover {
-      background: linear-gradient(135deg, #005bb5, #4aa0d3);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    }
-    .nav-button:disabled {
-      background: linear-gradient(135deg, #c7c7cc, #d1d1d6);
-      opacity: 0.6;
-      cursor: not-allowed;
-      box-shadow: none;
-      transform: none;
-    }
-    .nav-button:active { transform: scale(0.98); }
-    .result-card h3 { font-size: 1.2em; margin-bottom: 10px; }
-    .result-status { font-weight: bold; margin-bottom: 10px; }
-    .correct { color: #34c759; }
-    .incorrect { color: #ff3b30; }
-    #incorrect-summary {
-      background-color: rgba(255, 235, 238, 0.8);
-      border: 1px solid #ff3b30;
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    #incorrect-summary h3 { margin-top: 0; }
-    #incorrect-summary a {
-      display: inline-block;
-      margin: 5px;
-      padding: 5px 10px;
-      background-color: #ff3b30;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      transition: background-color 0.3s;
-    }
-    #incorrect-summary a:hover { background-color: #c50000; }
-    #attendance-link {
-      background-color: #34c759;
-      color: white;
-      padding: 15px;
-      border-radius: 12px;
-      margin-top: 20px;
-      text-align: center;
-      display: none;
-    }
-    #attendance-link a { color: white; text-decoration: none; font-weight: bold; }
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第3回確認テスト（健康障害１）</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+      background-size: cover;  
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1, h2 {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-weight: 700;
+      text-align: center;
+    }
+    .quiz-container, .result-card {
+      background-color: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    #progress-container {
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+      margin-bottom: 5px;
+      padding: 4px;
+    }
+    #progress-bar {
+      height: 12px;
+      width: 0%;
+      background: linear-gradient(135deg, #007aff, #5ac8fa);
+      border-radius: 6px;
+      transition: width 0.4s ease-in-out;
+    }
+    #progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 0 5px;
+      font-weight: bold;
+      font-size: 0.9em;
+      color: #1d1d1f;
+    }
+    .question {
+      font-size: 1.3em;
+      margin-bottom: 20px;
+      color: #1d1d1f;
+    }
+    .options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    .option {
+      background-color: rgba(255, 255, 255, 0.7);
+      border: none;
+      border-radius: 16px;
+      padding: 15px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .option:hover {
+      background-color: rgba(255, 255, 255, 1);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      transform: translateY(-2px);
+    }
+    .option.selected { color: #fff; }
+    .option.disabled { pointer-events: none; }
+    .option.correct {
+      background: linear-gradient(135deg, #34c759, #a8e6cf);
+      color: #fff;
+    }
+    .option.incorrect {
+      background: linear-gradient(135deg, #ff3b30, #ff9a8b);
+      color: #fff;
+    }
+    .explanation {
+      margin-top: 20px;
+      font-size: 1em;
+      color: #333;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-left: 5px solid;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .explanation-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .explanation-icon { font-size: 1.5em; margin-right: 10px; }
+    .nav-button {
+      background: linear-gradient(135deg, #007aff, #5ac8fa);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+      margin-top: 20px;
+      width: 100%;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .nav-button:hover {
+      background: linear-gradient(135deg, #005bb5, #4aa0d3);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    .nav-button:disabled {
+      background: linear-gradient(135deg, #c7c7cc, #d1d1d6);
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+    .nav-button:active { transform: scale(0.98); }
+    .result-card h3 { font-size: 1.2em; margin-bottom: 10px; }
+    .result-status { font-weight: bold; margin-bottom: 10px; }
+    .correct { color: #34c759; }
+    .incorrect { color: #ff3b30; }
+    #incorrect-summary {
+      background-color: rgba(255, 235, 238, 0.8);
+      border: 1px solid #ff3b30;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    #incorrect-summary h3 { margin-top: 0; }
+    #incorrect-summary a {
+      display: inline-block;
+      margin: 5px;
+      padding: 5px 10px;
+      background-color: #ff3b30;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: background-color 0.3s;
+    }
+    #incorrect-summary a:hover { background-color: #c50000; }
+    #attendance-link {
+      background-color: #34c759;
+      color: white;
+      padding: 15px;
+      border-radius: 12px;
+      margin-top: 20px;
+      text-align: center;
+      display: none;
+    }
+    #attendance-link a { color: white; text-decoration: none; font-weight: bold; }
 
-    /* ===== モダンな結果表示用CSS ===== */
-    #summary-card {
-      background: rgba(255, 255, 255, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      padding: 25px;
-    }
-    .summary-grid {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 30px;
-      flex-wrap: wrap;
-    }
-    .score-display {
-      display: grid;
-      place-items: center;
-    }
-    @property --p{
-      syntax: '<number>';
-      inherits: true;
-      initial-value: 0;
-    }
-    .score-circle {
-      --p: 20;
-      --b: 20px;
-      --c: #34c759;
-      --w: 180px;
-      width: var(--w);
-      aspect-ratio: 1;
-      position: relative;
-      display: inline-grid;
-      margin: 5px;
-      place-content: center;
-      font-size: 2.5em;
-      font-weight: bold;
-      animation: progress-load 1s 0.5s both;
-    }
-    .score-circle:before,
-    .score-circle:after {
-      content: "";
-      position: absolute;
-      border-radius: 50%;
-    }
-    .score-circle:before {
-      inset: 0;
-      background:
-        radial-gradient(farthest-side, var(--c) 98%, #0000) top/var(--b) var(--b) no-repeat,
-        conic-gradient(var(--c) calc(var(--p) * 1%), #0000 0);
-      -webkit-mask: radial-gradient(farthest-side, #0000 calc(99% - var(--b)), #000 calc(100% - var(--b)));
-              mask: radial-gradient(farthest-side, #0000 calc(99% - var(--b)), #000 calc(100% - var(--b)));
-    }
-    .score-circle:after {
-      inset: calc(50% - var(--b) / 2);
-      background: var(--c);
-      transform: rotate(calc(var(--p) * 3.6deg)) translateY(calc(50% - var(--w) / 2));
-    }
-    @keyframes progress-load {
-      from { --p: 0; }
-    }
-    .score-percentage small {
-      font-size: 0.5em;
-      color: #555;
-    }
-    .stats-details {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-    .stat-item {
-      display: flex;
-      align-items: center;
-      background-color: rgba(255, 255, 255, 0.5);
-      border-radius: 12px;
-      padding: 10px 15px;
-    }
-    .stat-icon {
-      font-size: 1.5em;
-      margin-right: 12px;
-    }
-    .stat-label {
-      font-size: 0.9em;
-      color: #333;
-      margin-right: auto;
-    }
-    .stat-value {
-      font-size: 1.2em;
-      font-weight: bold;
-      color: #000;
-    }
-    .feedback-message {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 1.1em;
-      font-weight: 500;
-      padding: 10px;
-      border-radius: 10px;
-      background-color: rgba(255, 255, 255, 0.3);
-    }
-  </style>
+    /* ===== モダンな結果表示用CSS ===== */
+    #summary-card {
+      background: rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 25px;
+    }
+    .summary-grid {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+    .score-display {
+      display: grid;
+      place-items: center;
+    }
+    @property --p{
+      syntax: '<number>';
+      inherits: true;
+      initial-value: 0;
+    }
+    .score-circle {
+      --p: 20;
+      --b: 20px;
+      --c: #34c759;
+      --w: 180px;
+      width: var(--w);
+      aspect-ratio: 1;
+      position: relative;
+      display: inline-grid;
+      margin: 5px;
+      place-content: center;
+      font-size: 2.5em;
+      font-weight: bold;
+      animation: progress-load 1s 0.5s both;
+    }
+    .score-circle:before,
+    .score-circle:after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+    }
+    .score-circle:before {
+      inset: 0;
+      background:
+        radial-gradient(farthest-side, var(--c) 98%, #0000) top/var(--b) var(--b) no-repeat,
+        conic-gradient(var(--c) calc(var(--p) * 1%), #0000 0);
+      -webkit-mask: radial-gradient(farthest-side, #0000 calc(99% - var(--b)), #000 calc(100% - var(--b)));
+              mask: radial-gradient(farthest-side, #0000 calc(99% - var(--b)), #000 calc(100% - var(--b)));
+    }
+    .score-circle:after {
+      inset: calc(50% - var(--b) / 2);
+      background: var(--c);
+      transform: rotate(calc(var(--p) * 3.6deg)) translateY(calc(50% - var(--w) / 2));
+    }
+    @keyframes progress-load {
+      from { --p: 0; }
+    }
+    .score-percentage small {
+      font-size: 0.5em;
+      color: #555;
+    }
+    .stats-details {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      padding: 10px 15px;
+    }
+    .stat-icon {
+      font-size: 1.5em;
+      margin-right: 12px;
+    }
+    .stat-label {
+      font-size: 0.9em;
+      color: #333;
+      margin-right: auto;
+    }
+    .stat-value {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #000;
+    }
+    .feedback-message {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 1.1em;
+      font-weight: 500;
+      padding: 10px;
+      border-radius: 10px;
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>第3回確認テスト（健康障害１）</h1>
-    <div id="quiz-container" class="quiz-container">
-      <div id="progress-container">
-        <div id="progress-bar"></div>
-      </div>
-      <div id="progress-info">
-        <div id="progress-text"></div>
-        <div id="timer">00:00</div>
-      </div>
-      
-      <div id="quiz-content">
-        <div id="question" class="question"></div>
-        <div id="options" class="options"></div>
-        <div id="explanation" class="explanation"></div>
-      </div>
-      <button id="next" class="nav-button" onclick="nextQuestion()" disabled>次の問題</button>
-    </div>
-    <div id="result-container"></div>
-    <div id="attendance-link"></div>
-  </div>
-  
-  <script>
-    const originalQuizData = [
-  {
-    "question": "炎症の5徴候のうち、「発赤」と「発熱（熱感）」の主な原因となるメカニズムはどれですか？",
-    "options": [
-      "血管透過性の亢進",
-      "ブラジキニンによる疼痛刺激",
-      "白血球の組織への遊走",
-      "局所の血管拡張と血流増大"
-    ],
-    "answer": 3,
-    [cite_start]"explanation": "炎症の5徴候のうち、発赤と発熱（熱感）は、局所の血管が拡張し、そこを流れる温かい血液の量が増大することによって引き起こされます [cite: 21][cite_start]。血管透過性の亢進は主に「腫脹」の原因となります [cite: 21]。"
-  },
-  {
-    "question": "急性炎症の初期段階で、炎症部位に最初に集結し、貪食能と殺菌作用を持つ主要な白血球はどれですか？",
-    "options": [
-      "好中球",
-      "リンパ球",
-      "単球（マクロファージ）",
-      "形質細胞"
-    ],
-    "answer": 0,
-    [cite_start]"explanation": "好中球は急性炎症の中心プレイヤーであり、局所に最初に遊走する白血球です [cite: 40, 41][cite_start]。異物を貪食し消化する役割を持ちます [cite: 42][cite_start]。リンパ球やマクロファージは、主に慢性炎症で見られます [cite: 33, 48]。"
-  },
-  {
-    "question": "白血球が炎症部位に移動する際、血管内皮細胞の表面を転がる「ローリング」と呼ばれる現象に、主に関与する接着分子はどれですか？",
-    "options": [
-      "インテグリン",
-      "ケモカイン",
-      "セレクチン",
-      "ヒスタミン"
-    ],
-    "answer": 2,
-    [cite_start]"explanation": "炎症部位のサイトカインにより血管内皮に発現した接着分子「セレクチン」と白血球がゆるく接着し、血流に沿って転がる（ローリング）現象が起こります [cite: 25][cite_start]。その後、ケモカインによりインテグリンが活性化し、強固な接着に至ります [cite: 25]。"
-  },
-  {
-    "question": "肥満細胞（マスト細胞）から放出され、血管透過性の亢進や血管拡張を引き起こす、I型アレルギーや急性炎症の主要な化学伝達物質はどれですか？",
-    "options": [
-      "ブラジキニン",
-      "ヒスタミン",
-      "プロスタグランジン",
-      "フィブリノーゲン"
-    ],
-    "answer": 1,
-    [cite_start]"explanation": "ヒスタミンは肥満細胞などに含まれ、血管拡張と透過性亢進の強力なメディエーターです [cite: 31][cite_start]。I型アレルギーの発生にも深く関与します [cite: 81, 88]。"
-  },
-  {
-    "question": "急性炎症が終息せず、マクロファージやリンパ球の浸潤が主体となり、組織の構造変化と機能欠損に至る炎症の病態を何と呼びますか？",
-    "options": [
-      "急性炎症",
-      "慢性炎症",
-      "肉芽形成",
-      "滲出"
-    ],
-    "answer": 1,
-    [cite_start]"explanation": "慢性炎症は、急性炎症（好中球主体）と異なり、免疫応答が関与し、マクロファージやリンパ球が主体となります [cite: 33][cite_start]。組織の破壊と修復が併存し、機能欠損に至ることがあります [cite: 33]。"
-  },
-  {
-    "question": "体内で炎症が起きた際、血液検査で測定されるマーカーのうち、炎症刺激から数時間〜1日程度で上昇し、急性炎症の良い指標とされるタンパク質はどれですか？",
-    "options": [
-      "サイトカイン (IL-6など)",
-      "CRP (C反応性タンパク)",
-      "赤沈 (赤血球沈降速度)",
-      "免疫グロブリン"
-    ],
-    "answer": 1,
-    [cite_start]"explanation": "炎症マーカーのうち、サイトカイン（IL-1, IL-6）が最も速く上昇しますが、測定が一般的ではありません [cite: 36][cite_start]。臨床検査では、サイトカインに続いて肝臓で産生されるCRPが、数時間から1日程度で上昇し、急性期の指標として広く用いられます [cite: 36]。"
-  },
-  {
-    "question": "花粉症、気管支喘息、アナフィラキシーショックに共通するアレルギーの分類はどれですか？",
-    "options": [
-      "I型（即時型）",
-      "II型（細胞障害型）",
-      "III型（免疫複合体型）",
-      "IV型（遅延型）"
-    ],
-    "answer": 0,
-    [cite_start]"explanation": "I型アレルギー（即時型）は、IgE抗体と肥満細胞が関与し、アレルギー性鼻炎（花粉症）、気管支喘息、蕁麻疹、アナフィラキシーショックなどの原因となります [cite: 76, 78]。"
-  },
-  {
-    "question": "I型アレルギーの発生機序において、ヒスタミンを放出する「脱顆粒」を引き起こす直接のトリガーはどれですか？",
-    "options": [
-      "肥満細胞表面のIgEにアレルゲンが結合する",
-      "T細胞がアレルゲンを認識する",
-      "アレルゲンにIgG抗体が結合する",
-      "補体が活性化する"
-    ],
-    "answer": 0,
-    [cite_start]"explanation": "I型アレルギーは、アレルゲンが肥満細胞（マスト細胞）の表面にあるIgE受容体に結合したIgE抗体に結合（架橋）することで脱顆粒が起こり、ヒスタミンが放出されます [cite: 79, 88]。"
-  },
-  {
-    "question": "血液型不適合輸血によって引き起こされる赤血球の破壊（溶血）は、どのアレルギー型に分類されますか？",
-    "options": [
-      "I型（即時型）",
-      "II型（細胞障害型）",
-      "III型（免疫複合体型）",
-      "IV型（遅延型）"
-    ],
-    "answer": 1,
-    [cite_start]"explanation": "II型アレルギー（細胞障害型）は、自己の細胞表面抗原（この場合は赤血球の血液型抗原）に対し、IgGやIgM抗体が結合し、補体やNK細胞によって細胞が破壊される反応です [cite: 93, 95, 97][cite_start]。不適合輸血はその典型例です [cite: 99]。"
-  },
-  {
-    "question": "抗原と抗体（主にIgG）が結合して形成された「免疫複合体」が、腎臓の糸球体や血管壁に沈着して炎症を引き起こすアレルギー型はどれですか？",
-    "options": [
-      "I型（即時型）",
-      "II型（細胞障害型）",
-      "III型（免疫複合体型）",
-      "IV型（遅延型）"
-    ],
-    "answer": 2,
-    [cite_start]"explanation": "III型アレルギー（免疫複合体型）は、抗原と抗体が結合した免疫複合体が組織に沈着し、そこで補体や好中球を活性化させて組織障害を引き起こします [cite: 108, 110, 116][cite_start]。糸球体腎炎や関節リウマチが例です [cite: 76, 114]。"
-  },
-  {
-    "question": "金属アレルギーによる接触性皮膚炎や、ツベルクリン反応のように、T細胞が関与し、反応発現までに48時間程度を要するアレルギー型はどれですか？",
-    "options": [
-      "I型（即時型）",
-      "II型（細胞障害型）",
-      "III型（免疫複合体型）",
-      "IV型（遅延型）"
-    ],
-    "answer": 3,
-    [cite_start]"explanation": "IV型アレルギー（遅延型）は、抗体が関与せず、感作T細胞がアレルゲンを認識してサイトカインを放出することで炎症が起こります [cite: 122, 129][cite_start]。細胞の反応に時間がかかるため遅延型と呼ばれます [cite: 120]。"
-  },
-  {
-    "question": "バセドウ病の原因となる、甲状腺のTSH受容体に結合し、持続的に刺激することで甲状腺ホルモンの過剰産生を引き起こすアレルギー型はどれですか？",
-    "options": [
-      "II型（細胞障害型）",
-      "III型（免疫複合体型）",
-      "IV型（遅延型）",
-      "V型（刺激型）"
-    ],
-    "answer": 3,
-    [cite_start]"explanation": "V型アレルギー（刺激型）は、自己抗体が細胞表面のホルモン受容体に結合し、ホルモンと同様の刺激を与えてしまうタイプです [cite: 135, 137][cite_start]。バセドウ病ではTSH受容体に対する抗体が原因となります [cite: 139, 142]。"
-  },
-  {
-    "question": "免疫システムが自己の生体成分を「非自己」と誤って認識し、自身を攻撃してしまう疾患群の総称は何ですか？",
-    "options": [
-      "アレルギー",
-      "免疫不全症",
-      "自己免疫疾患",
-      "日和見感染"
-    ],
-    "answer": 2,
-    [cite_start]"explanation": "自己免疫疾患は、本来反応しないはずの自己の生体成分に対し、抗体やリンパ球が病的に出現し、自分自身を攻撃して組織傷害を引き起こす疾患です [cite: 144-148]。"
-  },
-  {
-    "question": "関節リウマチ(RA)や全身性エリテマトーデス(SLE)のように、全身の血管、結合組織、関節が傷害される自己免疫疾患群を特に何と呼びますか？",
-    "options": [
-      "膠原病",
-      "臓器特異的自己免疫疾患",
-      "免疫不全症",
-      "アレルギー性疾患"
-    ],
-    "answer": 0,
-    [cite_start]"explanation": "膠原病は、血管、結合組織、関節などが自己免疫によって傷害される疾患群の総称です [cite: 152, 153][cite_start]。関節リウマチ(RA)や全身性エリテマトーデス(SLE)などが含まれます [cite: 155]。"
-  },
-  {
-    "question": "涙腺や唾液腺が自己免疫によって破壊され、角膜や口腔内の乾燥を主症状とする膠原病はどれですか？",
-    "options": [
-      "全身性エリテマトーデス (SLE)",
-      "進行性全身性硬化症 (PSS)",
-      "関節リウマチ (RA)",
-      "シェーグレン症候群"
-    ],
-    "answer": 3,
-    [cite_start]"explanation": "シェーグレン症候群は、主に涙腺や唾液腺が自己免疫によって破壊され、その結果、ドライアイやドライマウスといった乾燥症状を引き起こす疾患です [cite: 180, 182]。"
-  },
-  {
-    "question": "臓器移植において、移植を受けた患者（レシピエント）の免疫系が、移植された臓器（グラフト）を「非自己」として攻撃する反応は何ですか？",
-    "options": [
-      "移植片対宿主病 (GVHD)",
-      "拒絶反応",
-      "アナフィラキシーショック",
-      "自己免疫"
-    ],
-    "answer": 1,
-    [cite_start]"explanation": "拒絶反応は、移植を受けた患者（レシピエント）の免疫系が、ドナーから提供された臓器（グラフト）を非自己（異物）と認識して攻撃する反応です [cite: 195, 196]。"
-  },
-  {
-    "question": "骨髄移植などで、移植された臓器（グラフト）に含まれるドナーのリンパ球が、患者（宿主）の体を攻撃する重篤な合併症は何ですか？",
-    "options": [
-      "移植片対宿主病 (GVHD)",
-      "拒絶反応",
-      "II型アレルギー",
-      "日和見感染"
-    ],
-    "answer": 0,
-    [cite_start]"explanation": "移植片対宿主病 (GVHD) は、拒絶反応とは逆に、移植臓器に混在するドナーのリンパ球が、患者（レシピエント、宿主）の臓器を「非自己」として攻撃する反応です [cite: 203, 207, 209]。"
-  },
-  {
-    "question": "移植時の拒絶反応を抑えるために適合性が重要となる、個々人の細胞表面にある「自分のしるし」として機能するタンパク質複合体は何ですか？",
-    "options": [
-      "免疫グロブリン",
-      "MHC (主要組織適合遺伝子複合体)",
-      "サイトカイン",
-      "ケモカイン"
-    ],
-    "answer": 1,
-    [cite_start]"explanation": "MHC（ヒトではHLA）は、細胞表面にあるタンパク質で、個々人で異なる「自分のしるし」として機能します [cite: 211, 213, 215][cite_start]。移植時にこのMHCのタイプが似ていると拒絶反応が起こりにくくなります [cite: 216, 217]。"
-  },
-  {
-    "question": "後天性免疫不全症候群（AIDS）の原因であるHIVウイルスが、免疫の「司令塔」として主に感染・破壊する細胞はどれですか？",
-    "options": [
-      "ヘルパーT細胞",
-      "B細胞",
-      "好中球",
-      "NK細胞"
-    ],
-    "answer": 0,
-    [cite_start]"explanation": "HIVウイルスは、免疫の司令塔であるヘルパーT細胞に感染し、これを破壊します [cite: 230][cite_start]。その結果、B細胞やキラーT細胞も適切に機能できなくなり、免疫系全体が破綻します [cite: 232]。"
-  },
-  {
-    "question": "新生児が、生後数ヶ月間、母体から胎盤を通じて受け取った抗体によって感染症から守られる現象に関与する抗体はどれですか？",
-    "options": [
-      "IgA",
-      "IgE",
-      "IgG",
-      "IgM"
-    ],
-    "answer": 2,
-    [cite_start]"explanation": "胎盤を通過できるのはIgG抗体のみです。新生児は母体から受け継いだIgGにより、生後数ヶ月間、受動的に免疫（母体由来IgG）によって守られます [cite: 233]。"
-  }
+  <div class="container">
+    <h1>第3回確認テスト（健康障害１）</h1>
+    <div id="quiz-container" class="quiz-container">
+      <div id="progress-container">
+        <div id="progress-bar"></div>
+      </div>
+      <div id="progress-info">
+        <div id="progress-text"></div>
+        <div id="timer">00:00</div>
+      </div>
+      
+      <div id="quiz-content">
+        <div id="question" class="question"></div>
+        <div id="options" class="options"></div>
+        <div id="explanation" class="explanation"></div>
+      </div>
+      <button id="next" class="nav-button" onclick="nextQuestion()" disabled>次の問題</button>
+    </div>
+    <div id="result-container"></div>
+    <div id="attendance-link"></div>
+  </div>
+  
+  <script>
+    const originalQuizData = [
+  {
+    "question": "炎症の5徴候のうち、「発赤」と「発熱（熱感）」の主な原因となるメカニズムはどれですか？",
+    "options": [
+      "血管透過性の亢進",
+      "ブラジキニンによる疼痛刺激",
+      "白血球の組織への遊走",
+      "局所の血管拡張と血流増大"
+    ],
+    "answer": 3,
+    "explanation": "炎症の5徴候のうち、発赤と発熱（熱感）は、局所の血管が拡張し、そこを流れる温かい血液の量が増大することによって引き起こされます。血管透過性の亢進は主に「腫脹」の原因となります。"
+  },
+  {
+    "question": "急性炎症の初期段階で、炎症部位に最初に集結し、貪食能と殺菌作用を持つ主要な白血球はどれですか？",
+    "options": [
+      "好中球",
+      "リンパ球",
+      "単球（マクロファージ）",
+      "形質細胞"
+    ],
+    "answer": 0,
+    "explanation": "好中球は急性炎症の中心プレイヤーであり、局所に最初に遊走する白血球です。異物を貪食し消化する役割を持ちます。リンパ球やマクロファージは、主に慢性炎症で見られます。"
+  },
+  {
+    "question": "白血球が炎症部位に移動する際、血管内皮細胞の表面を転がる「ローリング」と呼ばれる現象に、主に関与する接着分子はどれですか？",
+    "options": [
+      "インテグリン",
+      "ケモカイン",
+      "セレクチン",
+      "ヒスタミン"
+    ],
+    "answer": 2,
+    "explanation": "炎症部位のサイトカインにより血管内皮に発現した接着分子「セレクチン」と白血球がゆるく接着し、血流に沿って転がる（ローリング）現象が起こります。その後、ケモカインによりインテグリンが活性化し、強固な接着に至ります。"
+  },
+  {
+    "question": "肥満細胞（マスト細胞）から放出され、血管透過性の亢進や血管拡張を引き起こす、I型アレルギーや急性炎症の主要な化学伝達物質はどれですか？",
+    "options": [
+      "ブラジキニン",
+      "ヒスタミン",
+      "プロスタグランジン",
+      "フィブリノーゲン"
+    ],
+    "answer": 1,
+    "explanation": "ヒスタミンは肥満細胞などに含まれ、血管拡張と透過性亢進の強力なメディエーターです。I型アレルギーの発生にも深く関与します。"
+F },
+  {
+    "question": "急性炎症が終息せず、マクロファージやリンパ球の浸潤が主体となり、組織の構造変化と機能欠損に至る炎症の病態を何と呼びますか？",
+    "options": [
+      "急性炎症",
+      "慢性炎症",
+      "肉芽形成",
+      "滲出"
+    ],
+    "answer": 1,
+    "explanation": "慢性炎症は、急性炎症（好中球主体）と異なり、免疫応答が関与し、マクロファージやリンパ球が主体となります。組織の破壊と修復が併存し、機能欠損に至ることがあります。"
+  },
+  {
+    "question": "体内で炎症が起きた際、血液検査で測定されるマーカーのうち、炎症刺激から数時間〜1日程度で上昇し、急性炎症の良い指標とされるタンパク質はどれですか？",
+    "options": [
+      "サイトカイン (IL-6など)",
+      "CRP (C反応性タンパク)",
+      "赤沈 (赤血球沈降速度)",
+      "免疫グロブリン"
+    ],
+    "answer": 1,
+    "explanation": "炎症マーカーのうち、サイトカイン（IL-1, IL-6）が最も速く上昇しますが、測定が一般的ではありません。臨床検査では、サイトカインに続いて肝臓で産生されるCRPが、数時間から1日程度で上昇し、急性期の指標として広く用いられます。"
+  },
+  {
+    "question": "花粉症、気管支喘息、アナフィラキシーショックに共通するアレルギーの分類はどれですか？",
+    "options": [
+      "I型（即時型）",
+      "II型（細胞障害型）",
+      "III型（免疫複合体型）",
+      "IV型（遅延型）"
+    ],
+    "answer": 0,
+    "explanation": "I型アレルギー（即時型）は、IgE抗体と肥満細胞が関与し、アレルギー性鼻炎（花粉症）、気管支喘息、蕁麻疹、アナフィラキシーショックなどの原因となります。"
+  },
+  {
+    "question": "I型アレルギーの発生機序において、ヒスタミンを放出する「脱顆粒」を引き起こす直接のトリガーはどれですか？",
+    "options": [
+      "肥満細胞表面のIgEにアレルゲンが結合する",
+      "T細胞がアレルゲンを認識する",
+      "アレルゲンにIgG抗体が結合する",
+      "補体が活性化する"
+    ],
+    "answer": 0,
+    "explanation": "I型アレルギーは、アレルゲンが肥満細胞（マスト細胞）の表面にあるIgE受容体に結合したIgE抗体に結合（架橋）することで脱顆粒が起こり、ヒスタミンが放出されます。"
+  },
+  {
+    "question": "血液型不適合輸血によって引き起こされる赤血球の破壊（溶血）は、どのアレルギー型に分類されますか？",
+    "options": [
+      "I型（即時型）",
+      "II型（細胞障害型）",
+      "III型（免疫複合体型）",
+      "IV型（遅延型）"
+    ],
+    "answer": 1,
+    "explanation": "II型アレルギー（細胞障害型）は、自己の細胞表面抗原（この場合は赤血球の血液型抗原）に対し、IgGやIgM抗体が結合し、補体やNK細胞によって細胞が破壊される反応です。不適合輸血はその典型例です。"
+  },
+  {
+    "question": "抗原と抗体（主にIgG）が結合して形成された「免疫複合体」が、腎臓の糸球体や血管壁に沈着して炎症を引き起こすアレルギー型はどれですか？",
+    "options": [
+      "I型（即時型）",
+      "II型（細胞障害型）",
+      "III型（免疫複合体型）",
+  T     "IV型（遅延型）"
+    ],
+    "answer": 2,
+    "explanation": "III型アレルギー（免疫複合体型）は、抗原と抗体が結合した免疫複合体が組織に沈着し、そこで補体や好中球を活性化させて組織障害を引き起こします。糸球体腎炎や関節リウマチが例です。"
+  },
+  {
+    "question": "金属アレルギーによる接触性皮膚炎や、ツベルクリン反応のように、T細胞が関与し、反応発現までに48時間程度を要するアレルギー型はどれですか？",
+    "options": [
+      "I型（即時型）",
+      "II型（細胞障害型）",
+      "III型（免疫複合体型）",
+      "IV型（遅延型）"
+    ],
+    "answer": 3,
+    "explanation": "IV型アレルギー（遅延型）は、抗体が関与せず、感作T細胞がアレルゲンを認識してサイトカインを放出することで炎症が起こります。細胞の反応に時間がかかるため遅延型と呼ばれます。"
+  },
+  {
+    "question": "バセドウ病の原因となる、甲状腺のTSH受容体に結合し、持続的に刺激することで甲状腺ホルモンの過剰産生を引き起こすアレルギー型はどれですか？",
+    "options": [
+      "II型（細胞障害型）",
+      "III型（免疫複合体型）",
+      "IV型（遅延型）",
+      "V型（刺激型）"
+    ],
+    "answer": 3,
+    "explanation": "V型アレルギー（刺激型）は、自己抗体が細胞表面のホルモン受容体に結合し、ホルモンと同様の刺激を与えてしまうタイプです。バセドウ病ではTSH受容体に対する抗体が原因となります。"
+  },
+  {
+    "question": "免疫システムが自己の生体成分を「非自己」と誤って認識し、自身を攻撃してしまう疾患群の総称は何ですか？",
+    "options": [
+      "アレルギー",
+      "免疫不全症",
+      "自己免疫疾患",
+      "日和見感染"
+    ],
+    "answer": 2,
+    "explanation": "自己免疫疾患は、本来反応しないはずの自己の生体成分に対し、抗体やリンパ球が病的に出現し、自分自身を攻撃して組織傷害を引き起こす疾患です。"
+  },
+  {
+    "question": "関節リウマチ(RA)や全身性エリテマトーデス(SLE)のように、全身の血管、結合組織、関節が傷害される自己免疫疾患群を特に何と呼びますか？",
+    "options": [
+      "膠原病",
+      "臓器特異的自己免疫疾患",
+      "免疫不全症",
+      "アレルギー性疾患"
+    ],
+    "answer": 0,
+    "explanation": "膠原病は、血管、結合組織、関節などが自己免疫によって傷害される疾患群の総称です。関節リウマチ(RA)や全身性エリテマトーデス(SLE)などが含まれます。"
+  },
+  {
+    "question": "涙腺や唾液腺が自己免疫によって破壊され、角膜や口腔内の乾燥を主症状とする膠原病はどれですか？",
+    "options": [
+      "全身性エリテマトーデス (SLE)",
+      "進行性全身性硬化症 (PSS)",
+      "関節リウマチ (RA)",
+      "シェーグレン症候群"
+    ],
+    "answer": 3,
+    "explanation": "シェーグレン症候群は、主に涙腺や唾液腺が自己免疫によって破壊され、その結果、ドライアイやドライマウスといった乾燥症状を引き起こす疾患です。"
+  },
+  {
+    "question": "臓器移植において、移植を受けた患者（レシピエント）の免疫系が、移植された臓器（グラフト）を「非自己」として攻撃する反応は何ですか？",
+    "options": [
+      "移植片対宿主病 (GVHD)",
+      "拒絶反応",
+      "アナフィラキシーショック",
+      "自己免疫"
+    ],
+    "answer": 1,
+    "explanation": "拒絶反応は、移植を受けた患者（レシピエント）の免疫系が、ドナーから提供された臓器（グラフト）を非自己（異物）と認識して攻撃する反応です。"
+  },
+  {
+    "question": "骨髄移植などで、移植された臓器（グラフト）に含まれるドナーのリンパ球が、患者（宿主）の体を攻撃する重篤な合併症は何ですか？",
+    "options": [
+      "移植片対宿主病 (GVHD)",
+      "拒絶反応",
+      "II型アレルギー",
+      "日和見感染"
+    ],
+    "answer": 0,
+    "explanation": "移植片対宿主病 (GVHD) は、拒絶反応とは逆に、移植臓器に混在するドナーのリンパ球が、患者（レシピエント、宿主）の臓器を「非自己」として攻撃する反応です。"
+  },
+  {
+    "question": "移植時の拒絶反応を抑えるために適合性が重要となる、個々人の細胞表面にある「自分のしるし」として機能するタンパク質複合体は何ですか？",
+    "options": [
+      "免疫グロブリン",
+      "MHC (主要組織適合遺伝子複合体)",
+      "サイトカイン",
+      "ケモカイン"
+    ],
+    "answer": 1,
+    "explanation": "MHC（ヒトではHLA）は、細胞表面にあるタンパク質で、個々人で異なる「自分のしるし」として機能します。移植時にこのMHCのタイプが似ていると拒絶反応が起こりにくくなります。"
+  },
+  {
+    "question": "後天性免疫不全症候群（AIDS）の原因であるHIVウイルスが、免疫の「司令塔」として主に感染・破壊する細胞はどれですか？",
+    "options": [
+      "ヘルパーT細胞",
+      "B細胞",
+      "好中球",
+      "NK細胞"
+    ],
+    "answer": 0,
+    "explanation": "HIVウイルスは、免疫の司令塔であるヘルパーT細胞に感染し、これを破壊します。その結果、B細胞やキラーT細胞も適切に機能できなくなり、免疫系全体が破綻します。"
+  },
+  {
+    "question": "新生児が、生後数ヶ月間、母体から胎盤を通じて受け取った抗体によって感染症から守られる現象に関与する抗体はどれですか？",
+    "options": [
+      "IgA",
+      "IgE",
+      "IgG",
+      "IgM"
+    ],
+    "answer": 2,
+    "explanation": "胎盤を通過できるのはIgG抗体のみです。新生児は母体から受け継いだIgGにより、生後数ヶ月間、受動的に免疫（母体由来IgG）によって守られます。"
+  }
 ];
-    
-    let quizData = [];
-    let currentQuestion = 0;
-    let score = 0;
-    let userAnswers = [];
-    let shuffledOptions = [];
-    let timerInterval = null;
-    let seconds = 0;
+    
+    let quizData = [];
+    let currentQuestion = 0;
+    let score = 0;
+    let userAnswers = [];
+    let shuffledOptions = [];
+    let timerInterval = null;
+    let seconds = 0;
 
-    function shuffleArray(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
-    }
-    
-    function updateTimer() {
-      seconds++;
-      const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
-      const secs = String(seconds % 60).padStart(2, '0');
-      document.getElementById('timer').textContent = `${mins}:${secs}`;
-    }
-    
-    function startQuiz() {
-      quizData = shuffleArray([...originalQuizData]);
-      userAnswers = new Array(quizData.length).fill(null);
-      seconds = 0;
-      document.getElementById('timer').textContent = '00:00';
-      if (timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(updateTimer, 1000);
-      loadQuestion();
-    }
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+    
+    function updateTimer() {
+      seconds++;
+      const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const secs = String(seconds % 60).padStart(2, '0');
+      document.getElementById('timer').textContent = `${mins}:${secs}`;
+    }
+    
+    function startQuiz() {
+      quizData = shuffleArray([...originalQuizData]);
+      userAnswers = new Array(quizData.length).fill(null);
+      seconds = 0;
+      document.getElementById('timer').textContent = '00:00';
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(updateTimer, 1000);
+      loadQuestion();
+    }
 
-    function loadQuestion() {
-      const progress = ((currentQuestion + 1) / quizData.length) * 100;
-      document.getElementById('progress-bar').style.width = `${progress}%`;
-      document.getElementById('progress-text').textContent = `${currentQuestion + 1} / ${quizData.length} 問`;
+    function loadQuestion() {
+      const progress = ((currentQuestion + 1) / quizData.length) * 100;
+      document.getElementById('progress-bar').style.width = `${progress}%`;
+      document.getElementById('progress-text').textContent = `${currentQuestion + 1} / ${quizData.length} 問`;
 
-      const question = quizData[currentQuestion];
-      document.getElementById('question').textContent = question.question;
+      const question = quizData[currentQuestion];
+      document.getElementById('question').textContent = question.question;
 
-      shuffledOptions = shuffleArray([...question.options]);
-      const optionsHtml = shuffledOptions.map(option => `
-        <div class="option" onclick="selectOption(this, '${option}')">${option}</div>
-      `).join('');
-      document.getElementById('options').innerHTML = optionsHtml;
+      shuffledOptions = shuffleArray([...question.options]);
+      const optionsHtml = shuffledOptions.map(option => `
+        <div class="option" onclick="selectOption(this, '${option}')">${option}</div>
+      `).join('');
+      document.getElementById('options').innerHTML = optionsHtml;
 
-      const explanationEl = document.getElementById('explanation');
-      explanationEl.style.display = 'none';
-      explanationEl.style.opacity = '0';
+      const explanationEl = document.getElementById('explanation');
+      explanationEl.style.display = 'none';
+      explanationEl.style.opacity = '0';
 
-      document.getElementById('next').disabled = true;
-    }
+      document.getElementById('next').disabled = true;
+    }
 
-    function selectOption(element, selectedOptionText) {
-      document.querySelectorAll('.option').forEach(option => option.classList.add('disabled'));
-      element.classList.add('selected');
+    function selectOption(element, selectedOptionText) {
+      document.querySelectorAll('.option').forEach(option => option.classList.add('disabled'));
+      element.classList.add('selected');
 
-      const question = quizData[currentQuestion];
-      const selectedAnswerIndex = question.options.indexOf(selectedOptionText);
-      userAnswers[currentQuestion] = selectedAnswerIndex;
+      const question = quizData[currentQuestion];
+      const selectedAnswerIndex = question.options.indexOf(selectedOptionText);
+      userAnswers[currentQuestion] = selectedAnswerIndex;
 
-      const isCorrect = selectedAnswerIndex === question.answer;
+      const isCorrect = selectedAnswerIndex === question.answer;
 
-      if (isCorrect) {
-        element.classList.add('correct');
-        score++;
-      } else {
-        element.classList.add('incorrect');
-        const correctAnswerText = question.options[question.answer];
-        document.querySelectorAll('.option').forEach(opt => {
-          if (opt.textContent === correctAnswerText) {
-            opt.classList.add('correct');
-          }
-        });
-      }
+      if (isCorrect) {
+        element.classList.add('correct');
+        score++;
+      } else {
+        element.classList.add('incorrect');
+        const correctAnswerText = question.options[question.answer];
+        document.querySelectorAll('.option').forEach(opt => {
+          if (opt.textContent === correctAnswerText) {
+            opt.classList.add('correct');
+          }
+        });
+      }
 
-      const explanationEl = document.getElementById('explanation');
-      explanationEl.innerHTML = `
-        <div class="explanation-header" style="color: ${isCorrect ? '#4caf50' : '#f44336'};">
-          <span class="explanation-icon">💡</span>
-          解説
-        </div>
-        ${question.explanation}
-      `;
-      explanationEl.style.borderLeftColor = isCorrect ? '#4caf50' : '#f44336';
-      explanationEl.style.display = 'block';
-      
-      setTimeout(() => { explanationEl.style.opacity = '1'; }, 100);
+      const explanationEl = document.getElementById('explanation');
+      explanationEl.innerHTML = `
+        <div class="explanation-header" style="color: ${isCorrect ? '#4caf50' : '#f44336'};">
+          <span class="explanation-icon">💡</span>
+          解説
+        </div>
+        ${question.explanation}
+      `;
+      explanationEl.style.borderLeftColor = isCorrect ? '#4caf50' : '#f44336';
+      explanationEl.style.display = 'block';
+      
+      setTimeout(() => { explanationEl.style.opacity = '1'; }, 100);
 
-      document.getElementById('next').disabled = false;
-    }
+      document.getElementById('next').disabled = false;
+    }
 
-    function nextQuestion() {
-      if (currentQuestion < quizData.length - 1) {
-        currentQuestion++;
-        loadQuestion();
-      } else {
-        showResult();
-      }
-    }
+    function nextQuestion() {
+      if (currentQuestion < quizData.length - 1) {
+        currentQuestion++;
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
 
-    function showResult() {
-      clearInterval(timerInterval);
-      const finalTime = document.getElementById('timer').textContent;
+    function showResult() {
+      clearInterval(timerInterval);
+      const finalTime = document.getElementById('timer').textContent;
 
-      const resultContainer = document.getElementById('result-container');
-      const quizContainer = document.getElementById('quiz-container');
-      quizContainer.style.display = 'none';
+      const resultContainer = document.getElementById('result-container');
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.style.display = 'none';
 
-      const percentage = (score / quizData.length) * 100;
-      
-      let scoreColor;
-      let feedbackMessage;
-      if (percentage < 40) {
-        scoreColor = '#ff3b30';
-        feedbackMessage = 'お疲れ様でした！間違えた問題を中心にしっかり復習しましょう。';
-      } else if (percentage < 80) {
-        scoreColor = '#ff9500';
-        feedbackMessage = 'あと一歩！間違えた箇所を復習すれば、さらに実力がアップします。';
-      } else {
-        scoreColor = '#34c759';
-        feedbackMessage = '素晴らしい成績です！この調子で学習を続けましょう。';
-      }
-      if (percentage === 100) {
-        feedbackMessage = '完璧です！素晴らしい集中力と知識です。おめでとうございます！';
-      }
+      const percentage = (score / quizData.length) * 100;
+      
+      let scoreColor;
+      let feedbackMessage;
+      if (percentage < 40) {
+        scoreColor = '#ff3b30';
+        feedbackMessage = 'お疲れ様でした！間違えた問題を中心にしっかり復習しましょう。';
+      } else if (percentage < 80) {
+        scoreColor = '#ff9500';
+        feedbackMessage = 'あと一歩！間違えた箇所を復習すれば、さらに実力がアップします。';
+      } else {
+        scoreColor = '#34c759';
+        feedbackMessage = '素晴らしい成績です！この調子で学習を続けましょう。';
+      }
+      if (percentage === 100) {
+        feedbackMessage = '完璧です！素晴らしい集中力と知識です。おめでとうございます！';
+      }
 
-      const summaryCardHtml = `
-        <div class="result-card" id="summary-card">
-          <div class="summary-grid">
-            <div class="score-display">
-              <div class="score-circle" style="--p:${percentage.toFixed(1)}; --c:'${scoreColor}';">
-                <span class="score-percentage">${Math.round(percentage)}<small>%</small></span>
-              </div>
-            </div>
-            <div class="stats-details">
-              <div class="stat-item">
-                <span class="stat-icon">✅</span>
-                <span class="stat-label">正解数</span>
-                <span class="stat-value">${score} / ${quizData.length}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-icon">⏱️</span>
-                <span class="stat-label">所要時間</span>
-                <span class="stat-value">${finalTime}</span>
-              </div>
-            </div>
-          </div>
-          <p class="feedback-message" style="color: ${scoreColor};">${feedbackMessage}</p>
-        </div>
-      `;
+      const summaryCardHtml = `
+        <div class="result-card" id="summary-card">
+          <div class="summary-grid">
+            <div class="score-display">
+              <div class="score-circle" style="--p:${percentage.toFixed(1)}; --c:'${scoreColor}';">
+                <span class="score-percentage">${Math.round(percentage)}<small>%</small></span>
+              </div>
+            </div>
+            <div class="stats-details">
+              <div class="stat-item">
+                <span class="stat-icon">✅</span>
+                <span class="stat-label">正解数</span>
+                <span class="stat-value">${score} / ${quizData.length}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-icon">⏱️</span>
+                <span class="stat-label">所要時間</span>
+                <span class="stat-value">${finalTime}</span>
+              </div>
+            </div>
+          </div>
+          <p class="feedback-message" style="color: ${scoreColor};">${feedbackMessage}</p>
+        </div>
+      `;
 
-      const incorrectQuestions = [];
-      quizData.forEach((question, index) => {
-        if (userAnswers[index] !== question.answer) {
-          incorrectQuestions.push({ number: index + 1 });
-        }
-      });
+      const incorrectQuestions = [];
+      quizData.forEach((question, index) => {
+        if (userAnswers[index] !== question.answer) {
+          incorrectQuestions.push({ number: index + 1 });
+        }
+      });
 
-      let resultHtml = `<h2>クイズ結果</h2>` + summaryCardHtml;
-      
-      if (incorrectQuestions.length > 0) {
-        resultHtml += `
-          <div id="incorrect-summary">
-            <h3>要復習の問題</h3>
-            ${incorrectQuestions.map(item => `<a href="#result-q-${item.number}">${item.number}</a>`).join('')}
-          </div>
-        `;
-      }
+      let resultHtml = `<h2>クイズ結果</h2>` + summaryCardHtml;
+      
+      if (incorrectQuestions.length > 0) {
+        resultHtml += `
+          <div id="incorrect-summary">
+            <h3>要復習の問題</h3>
+            ${incorrectQuestions.map(item => `<a href="#result-q-${item.number}">${item.number}</a>`).join('')}
+          </div>
+        `;
+      }
 
-      quizData.forEach((question, index) => {
-        const userAnswerIndex = userAnswers[index];
-        const isCorrect = userAnswerIndex === question.answer;
-        resultHtml += `
-          <div class="result-card" id="result-q-${index + 1}">
-            <h3>問題 ${index + 1}</h3>
-            <p class="result-status ${isCorrect ? 'correct' : 'incorrect'}">
-              ${isCorrect ? '正解' : '不正解'}
-            </p>
-            <p><strong>質問:</strong> ${question.question}</p>
-            <p><strong>あなたの回答:</strong> ${userAnswerIndex !== null ? question.options[userAnswerIndex] : '未回答'}</p>
-            <p><strong>正解:</strong> ${question.options[question.answer]}</p>
-            <p><strong>説明:</strong> ${question.explanation}</p>
-          </div>
-        `;
-      });
+      quizData.forEach((question, index) => {
+        const userAnswerIndex = userAnswers[index];
+        const isCorrect = userAnswerIndex === question.answer;
+        resultHtml += `
+          <div class="result-card" id="result-q-${index + 1}">
+            <h3>問題 ${index + 1}</h3>
+            <p class="result-status ${isCorrect ? 'correct' : 'incorrect'}">
+              ${isCorrect ? '正解' : '不正解'}
+            </p>
+            <p><strong>質問:</strong> ${question.question}</p>
+            <p><strong>あなたの回答:</strong> ${userAnswerIndex !== null ? question.options[userAnswerIndex] : '未回答'}</p>
+            <p><strong>正解:</strong> ${question.options[question.answer]}</p>
+            <p><strong>説明:</strong> ${question.explanation}</p>
+          </div>
+        `;
+      });
 
-      resultHtml += `<button class="nav-button" onclick="restartQuiz()">もう一度挑戦する</button>`;
-      resultContainer.innerHTML = resultHtml;
+      resultHtml += `<button class="nav-button" onclick="restartQuiz()">もう一度挑戦する</button>`;
+      resultContainer.innerHTML = resultHtml;
 
-      if (percentage === 100) {
-        const attendanceLink = document.getElementById('attendance-link');
-        attendanceLink.style.display = 'block';
-        attendanceLink.innerHTML = `
-          <p>おめでとうございます！全問正解です。</p>
-          <a href="https://forms.gle/jCUgdfcFLPitJqCaA" target="_blank">出席確認フォームに回答する</a>
-        `;
-      }
-    }
+      if (percentage === 100) {
+        const attendanceLink = document.getElementById('attendance-link');
+        attendanceLink.style.display = 'block';
+        attendanceLink.innerHTML = `
+          <p>おめでとうございます！全問正解です。</p>
+          <a href="https://forms.gle/jCUgdfcFLPitJqCaA" target="_blank">出席確認フォームに回答する</a>
+        `;
+      }
+    }
 
-    function restartQuiz() {
-      currentQuestion = 0;
-      score = 0;
-      document.getElementById('quiz-container').style.display = 'block';
-      document.getElementById('result-container').innerHTML = '';
-      document.getElementById('attendance-link').style.display = 'none';
-      startQuiz();
-    }
+    function restartQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      document.getElementById('quiz-container').style.display = 'block';
+      document.getElementById('result-container').innerHTML = '';
+      document.getElementById('attendance-link').style.display = 'none';
+      startQuiz();
+    }
 
-    startQuiz();
-  </script>
+    startQuiz();
+  </script>
 </body>
 </html>
