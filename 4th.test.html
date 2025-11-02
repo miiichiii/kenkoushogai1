@@ -54,6 +54,8 @@
     .nav-button:hover{background:linear-gradient(135deg,#005bb5,#4aa0d3);box-shadow:0 8px 16px rgba(0,0,0,.2);}
     .nav-button:disabled{background:linear-gradient(135deg,#c7c7cc,#d1d1d6);opacity:.6;cursor:not-allowed;box-shadow:none;transform:none;}
     .nav-button:active{transform:scale(.98);}
+    .nav-button.retry-mode{background:linear-gradient(135deg,#ff9500,#ff6347);}
+    .nav-button.retry-mode:hover{background:linear-gradient(135deg,#cc7700,#cc4f3a);}
     .result-card h3{font-size:1.2em;margin-bottom:10px;}
     .result-status{font-weight:bold;margin-bottom:10px;}
     .correct{color:#34c759;}
@@ -64,6 +66,19 @@
     #incorrect-summary a:hover{background-color:#c50000;}
     #attendance-link{background-color:#34c759;color:#fff;padding:15px;border-radius:12px;margin-top:20px;text-align:center;display:none;}
     #attendance-link a{color:#fff;text-decoration:none;font-weight:bold;}
+
+    /* ---- モード表示バッジ ---- */
+    .mode-badge{
+      display:inline-block;
+      background:linear-gradient(135deg,#ff9500,#ff6347);
+      color:#fff;
+      padding:8px 16px;
+      border-radius:20px;
+      font-size:0.9em;
+      font-weight:bold;
+      margin-bottom:15px;
+      box-shadow:0 4px 8px rgba(255,149,0,0.3);
+    }
 
     /* ---- 成績カード ---- */
     #summary-card{background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.4);padding:25px;}
@@ -155,6 +170,7 @@
     <h1>第3回確認テスト（健康障害１）</h1>
 
     <div id="quiz-container" class="quiz-container">
+      <div id="mode-indicator"></div>
       <div id="progress-container"><div id="progress-bar"></div></div>
       <div id="progress-info">
         <div id="progress-text"></div>
@@ -394,6 +410,8 @@
     let order = [];        // 全設問の並び
     let optionOrder = [];  // 各設問ごとの選択肢インデックス並び
     let timer = null, seconds = 0;
+    let retryMode = false; // 復習モードフラグ
+    let incorrectQuestions = []; // 間違えた問題のインデックス
 
     function startTimer(){
       if(timer) clearInterval(timer);
@@ -406,15 +424,35 @@
       },1000);
     }
 
-    function initQuiz(){
+    function initQuiz(retryOnly = false){
+      retryMode = retryOnly;
+      
+      if(retryMode && incorrectQuestions.length === 0){
+        alert('間違えた問題がありません！');
+        return;
+      }
+
       // 設問の順番をシャッフル
-      order = shuffle([...Array(quizData.length).keys()]);
+      if(retryMode){
+        order = shuffle([...incorrectQuestions]);
+      } else {
+        order = shuffle([...Array(quizData.length).keys()]);
+      }
+      
       // 各設問の選択肢インデックスをシャッフル
       optionOrder = order.map(qi => shuffle([0,1,2,3]));
       userAnswers = Array(quizData.length).fill(null);
       current = 0; score = 0;
       startTimer();
       renderQuestion();
+      
+      // モード表示
+      const modeIndicator = $('mode-indicator');
+      if(retryMode){
+        modeIndicator.innerHTML = '<div class="mode-badge">📝 復習モード（間違えた問題のみ）</div>';
+      } else {
+        modeIndicator.innerHTML = '';
+      }
     }
 
     function renderQuestion(){
@@ -422,9 +460,9 @@
       const q = quizData[qIndex];
 
       // 進捗
-      const prog = ((current+1)/quizData.length)*100;
+      const prog = ((current+1)/order.length)*100;
       $('progress-bar').style.width = `${prog}%`;
-      $('progress-text').textContent = `${current+1} / ${quizData.length} 問`;
+      $('progress-text').textContent = `${current+1} / ${order.length} 問`;
 
       // 本文
       $('question').textContent = q.question;
@@ -475,7 +513,7 @@
     };
 
     $('next').addEventListener('click', ()=>{
-      if(current < quizData.length-1){ current++; renderQuestion(); }
+      if(current < order.length-1){ current++; renderQuestion(); }
       else{ showResult(); }
     });
 
@@ -484,7 +522,7 @@
       const finalTime = $('timer').textContent;
       $('quiz-container').style.display = 'none';
 
-      const total = quizData.length;
+      const total = order.length;
       const pct = (score/total)*100;
       let color = '#34c759', msg = '素晴らしい成績です！この調子で学習を続けましょう。';
       if(pct < 40){ color = '#ff3b30'; msg = 'お疲れ様でした！間違えた問題を中心にしっかり復習しましょう。'; }
@@ -500,6 +538,16 @@
             <div class="celebration-text">🎉 パーフェクト！ 🎉</div>
           </div>
         `;
+      }
+
+      // 間違えた問題を記録（通常モード時のみ）
+      if(!retryMode){
+        incorrectQuestions = [];
+        order.forEach((qIndex)=>{
+          if(userAnswers[qIndex] !== null && userAnswers[qIndex] !== quizData[qIndex].answer){
+            incorrectQuestions.push(qIndex);
+          }
+        });
       }
 
       // 成績サマリー
@@ -523,9 +571,9 @@
 
       // 間違い一覧
       const wrong = [];
-      quizData.forEach((q, qi)=>{
-        if(userAnswers[qi] === null) return;
-        if(userAnswers[qi] !== q.answer) wrong.push(qi+1);
+      order.forEach((qIndex)=>{
+        if(userAnswers[qIndex] === null) return;
+        if(userAnswers[qIndex] !== quizData[qIndex].answer) wrong.push(order.indexOf(qIndex)+1);
       });
 
       let html = `<h2>クイズ結果</h2>${summary}`;
@@ -539,12 +587,13 @@
       }
 
       // 各問のレビュー
-      quizData.forEach((q, qi)=>{
-        const ua = userAnswers[qi];
+      order.forEach((qIndex, idx)=>{
+        const q = quizData[qIndex];
+        const ua = userAnswers[qIndex];
         const ok = (ua === q.answer);
         html += `
-          <div class="result-card" id="result-q-${qi+1}">
-            <h3>問題 ${qi+1}</h3>
+          <div class="result-card" id="result-q-${idx+1}">
+            <h3>問題 ${idx+1}</h3>
             <p class="result-status ${ok ? 'correct':'incorrect'}">${ok ? '正解':'不正解'}</p>
             <p><strong>質問:</strong> ${q.question}</p>
             <p><strong>あなたの回答:</strong> ${ua !== null ? q.options[ua] : '未回答'}</p>
@@ -554,14 +603,22 @@
         `;
       });
 
+      // ボタン
       html += `<button class="nav-button" onclick="restartQuiz()">もう一度挑戦する</button>`;
+      
+      // 間違えた問題があれば復習モードボタンを追加
+      if(!retryMode && incorrectQuestions.length > 0){
+        html += `<button class="nav-button retry-mode" onclick="startRetryMode()">間違えた問題だけやる（${incorrectQuestions.length}問）</button>`;
+      }
+      
       $('result-container').innerHTML = html;
 
-      if(pct === 100){
+      // 全問正解時の出席確認リンク（通常モードで全問正解の場合のみ）
+      if(pct === 100 && !retryMode && total === quizData.length){
         const a = $('attendance-link');
         a.style.display = 'block';
         a.innerHTML = `<p>おめでとうございます！全問正解です。</p>
-          <a href="https://forms.gle/MKKrysHnUfPnSBQt8" target="_blank" rel="noopener">出席確認フォームに回答する</a>`;
+          <a href="https://forms.gle/Uun3fT1xUG7bybSB6" target="_blank" rel="noopener">出席確認フォームに回答する</a>`;
       }
     }
 
@@ -569,11 +626,18 @@
       $('quiz-container').style.display = 'block';
       $('result-container').innerHTML = '';
       $('attendance-link').style.display = 'none';
-      initQuiz();
+      initQuiz(false);
+    };
+
+    window.startRetryMode = function(){
+      $('quiz-container').style.display = 'block';
+      $('result-container').innerHTML = '';
+      $('attendance-link').style.display = 'none';
+      initQuiz(true);
     };
 
     // 起動
-    initQuiz();
+    initQuiz(false);
   </script>
 </body>
 </html>
