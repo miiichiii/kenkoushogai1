@@ -54,8 +54,13 @@
     .nav-button:hover{background:linear-gradient(135deg,#005bb5,#4aa0d3);box-shadow:0 8px 16px rgba(0,0,0,.2);}
     .nav-button:disabled{background:linear-gradient(135deg,#c7c7cc,#d1d1d6);opacity:.6;cursor:not-allowed;box-shadow:none;transform:none;}
     .nav-button:active{transform:scale(.98);}
-    .nav-button.retry-mode{background:linear-gradient(135deg,#ff9500,#ff6347);}
-    .nav-button.retry-mode:hover{background:linear-gradient(135deg,#cc7700,#cc4f3a);}
+    .nav-button.retry-wrong{
+      background:linear-gradient(135deg,#ff9500,#ff6347);
+      margin-top:10px;
+    }
+    .nav-button.retry-wrong:hover{
+      background:linear-gradient(135deg,#cc7700,#cc5039);
+    }
     .result-card h3{font-size:1.2em;margin-bottom:10px;}
     .result-status{font-weight:bold;margin-bottom:10px;}
     .correct{color:#34c759;}
@@ -67,7 +72,7 @@
     #attendance-link{background-color:#34c759;color:#fff;padding:15px;border-radius:12px;margin-top:20px;text-align:center;display:none;}
     #attendance-link a{color:#fff;text-decoration:none;font-weight:bold;}
 
-    /* ---- モード表示バッジ ---- */
+    /* ---- モードバッジ ---- */
     .mode-badge{
       display:inline-block;
       background:linear-gradient(135deg,#ff9500,#ff6347);
@@ -77,7 +82,7 @@
       font-size:0.9em;
       font-weight:bold;
       margin-bottom:15px;
-      box-shadow:0 4px 8px rgba(255,149,0,0.3);
+      box-shadow:0 4px 8px rgba(0,0,0,0.2);
     }
 
     /* ---- 成績カード ---- */
@@ -410,8 +415,9 @@
     let order = [];        // 全設問の並び
     let optionOrder = [];  // 各設問ごとの選択肢インデックス並び
     let timer = null, seconds = 0;
-    let retryMode = false; // 復習モードフラグ
-    let incorrectQuestions = []; // 間違えた問題のインデックス
+    let isRetryMode = false; // 間違い直しモードフラグ
+    let wrongQuestions = []; // 間違えた問題のインデックスリスト
+    let retryHistory = {}; // 各問題の復習履歴を保存
 
     function startTimer(){
       if(timer) clearInterval(timer);
@@ -424,19 +430,18 @@
       },1000);
     }
 
-    function initQuiz(retryOnly = false){
-      retryMode = retryOnly;
+    function initQuiz(retryMode = false, retryQuestions = []){
+      isRetryMode = retryMode;
       
-      if(retryMode && incorrectQuestions.length === 0){
-        alert('間違えた問題がありません！');
-        return;
-      }
-
-      // 設問の順番をシャッフル
-      if(retryMode){
-        order = shuffle([...incorrectQuestions]);
+      if(isRetryMode){
+        // 間違い直しモード
+        order = shuffle([...retryQuestions]);
+        $('mode-indicator').innerHTML = '<div class="mode-badge">🔄 間違い直しモード</div>';
       } else {
+        // 通常モード
         order = shuffle([...Array(quizData.length).keys()]);
+        $('mode-indicator').innerHTML = '';
+        retryHistory = {}; // 履歴リセット
       }
       
       // 各設問の選択肢インデックスをシャッフル
@@ -445,14 +450,6 @@
       current = 0; score = 0;
       startTimer();
       renderQuestion();
-      
-      // モード表示
-      const modeIndicator = $('mode-indicator');
-      if(retryMode){
-        modeIndicator.innerHTML = '<div class="mode-badge">📝 復習モード（間違えた問題のみ）</div>';
-      } else {
-        modeIndicator.innerHTML = '';
-      }
     }
 
     function renderQuestion(){
@@ -488,6 +485,13 @@
       const q = quizData[qIndex];
       const isCorrect = (originalOptionIndex === q.answer);
       userAnswers[qIndex] = originalOptionIndex;
+      
+      // 復習履歴を記録
+      if(isRetryMode){
+        if(!retryHistory[qIndex]) retryHistory[qIndex] = [];
+        retryHistory[qIndex].push(isCorrect);
+      }
+      
       if(isCorrect){ el.classList.add('correct'); score++; }
       else{
         el.classList.add('incorrect');
@@ -540,17 +544,8 @@
         `;
       }
 
-      // 間違えた問題を記録（通常モード時のみ）
-      if(!retryMode){
-        incorrectQuestions = [];
-        order.forEach((qIndex)=>{
-          if(userAnswers[qIndex] !== null && userAnswers[qIndex] !== quizData[qIndex].answer){
-            incorrectQuestions.push(qIndex);
-          }
-        });
-      }
-
       // 成績サマリー
+      const modeText = isRetryMode ? ' (間違い直しモード)' : '';
       const summary = `
         <div class="result-card" id="summary-card">
           ${skullHTML}
@@ -561,7 +556,7 @@
               </div>
             </div>
             <div class="stats-details">
-              <div class="stat-item"><span class="stat-icon">✅</span><span class="stat-label">正解数</span><span class="stat-value">${score} / ${total}</span></div>
+              <div class="stat-item"><span class="stat-icon">✅</span><span class="stat-label">正解数</span><span class="stat-value">${score} / ${total}${modeText}</span></div>
               <div class="stat-item"><span class="stat-icon">⏱️</span><span class="stat-label">所要時間</span><span class="stat-value">${finalTime}</span></div>
             </div>
           </div>
@@ -570,31 +565,47 @@
       `;
 
       // 間違い一覧
-      const wrong = [];
+      wrongQuestions = [];
       order.forEach((qIndex)=>{
         if(userAnswers[qIndex] === null) return;
-        if(userAnswers[qIndex] !== quizData[qIndex].answer) wrong.push(order.indexOf(qIndex)+1);
+        if(userAnswers[qIndex] !== quizData[qIndex].answer){
+          wrongQuestions.push(qIndex);
+        }
       });
 
       let html = `<h2>クイズ結果</h2>${summary}`;
-      if(wrong.length){
+      
+      // 間違い直しボタン
+      if(wrongQuestions.length > 0){
         html += `
           <div id="incorrect-summary">
-            <h3>要復習の問題</h3>
-            ${wrong.map(n=>`<a href="#result-q-${n}">${n}</a>`).join('')}
+            <h3>要復習の問題（${wrongQuestions.length}問）</h3>
+            ${wrongQuestions.map(qi=>`<a href="#result-q-${qi+1}">問${qi+1}</a>`).join('')}
+            <button class="nav-button retry-wrong" onclick="retryWrongQuestions()">❌ 間違えた問題だけやり直す</button>
           </div>
         `;
       }
 
       // 各問のレビュー
-      order.forEach((qIndex, idx)=>{
+      order.forEach((qIndex)=>{
         const q = quizData[qIndex];
         const ua = userAnswers[qIndex];
         const ok = (ua === q.answer);
+        
+        // 復習履歴表示
+        let historyHTML = '';
+        if(retryHistory[qIndex] && retryHistory[qIndex].length > 0){
+          const historyIcons = retryHistory[qIndex].map(correct => 
+            correct ? '✅' : '❌'
+          ).join(' ');
+          historyHTML = `<p><strong>復習履歴:</strong> ${historyIcons}</p>`;
+        }
+        
         html += `
-          <div class="result-card" id="result-q-${idx+1}">
-            <h3>問題 ${idx+1}</h3>
-            <p class="result-status ${ok ? 'correct':'incorrect'}">${ok ? '正解':'不正解'}</p>
+          <div class="result-card" id="result-q-${qIndex+1}">
+            <h3>問題 ${qIndex+1}</h3>
+            <p class="result-status ${ok ? 'correct':'incorrect'}">${ok ? '✅ 正解':'❌ 不正解'}</p>
+            ${historyHTML}
             <p><strong>質問:</strong> ${q.question}</p>
             <p><strong>あなたの回答:</strong> ${ua !== null ? q.options[ua] : '未回答'}</p>
             <p><strong>正解:</strong> ${q.options[q.answer]}</p>
@@ -603,18 +614,10 @@
         `;
       });
 
-      // ボタン
-      html += `<button class="nav-button" onclick="restartQuiz()">もう一度挑戦する</button>`;
-      
-      // 間違えた問題があれば復習モードボタンを追加
-      if(!retryMode && incorrectQuestions.length > 0){
-        html += `<button class="nav-button retry-mode" onclick="startRetryMode()">間違えた問題だけやる（${incorrectQuestions.length}問）</button>`;
-      }
-      
+      html += `<button class="nav-button" onclick="restartQuiz()">🔄 全問題をもう一度挑戦する</button>`;
       $('result-container').innerHTML = html;
 
-      // 全問正解時の出席確認リンク（通常モードで全問正解の場合のみ）
-      if(pct === 100 && !retryMode && total === quizData.length){
+      if(pct === 100 && !isRetryMode){
         const a = $('attendance-link');
         a.style.display = 'block';
         a.innerHTML = `<p>おめでとうございます！全問正解です。</p>
@@ -629,15 +632,19 @@
       initQuiz(false);
     };
 
-    window.startRetryMode = function(){
+    window.retryWrongQuestions = function(){
+      if(wrongQuestions.length === 0){
+        alert('間違えた問題がありません！');
+        return;
+      }
       $('quiz-container').style.display = 'block';
       $('result-container').innerHTML = '';
       $('attendance-link').style.display = 'none';
-      initQuiz(true);
+      initQuiz(true, wrongQuestions);
     };
 
     // 起動
-    initQuiz(false);
+    initQuiz();
   </script>
 </body>
 </html>
