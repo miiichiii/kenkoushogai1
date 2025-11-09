@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>第5回確認テスト（健康障害１：循環障害）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,'Open Sans','Helvetica Neue',sans-serif;
+      line-height:1.6;color:#333;
+      background:linear-gradient(135deg,#a8edea,#fed6e3);
+      background-size:cover;background-repeat:no-repeat;background-attachment:fixed;
+      padding:20px;margin:0;
+    }
+    .container{max-width:800px;margin:0 auto;}
+    h1,h2{font-family:'Noto Sans JP',sans-serif;font-weight:700;text-align:center;}
+    .quiz-container,.result-card{
+      background-color:rgba(255,255,255,0.2);
+      backdrop-filter:blur(10px);
+      border-radius:16px;padding:20px;margin-bottom:20px;
+      border:1px solid rgba(255,255,255,0.3);
+      box-shadow:0 8px 24px rgba(0,0,0,0.2);
+    }
+    #progress-container{width:100%;background-color:rgba(255,255,255,0.3);border-radius:10px;margin-bottom:5px;padding:4px;}
+    #progress-bar{height:12px;width:0%;background:linear-gradient(135deg,#007aff,#5ac8fa);border-radius:6px;transition:width .4s ease-in-out;}
+    #progress-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:0 5px;font-weight:bold;font-size:.9em;color:#1d1d1f;}
+    .question{font-size:1.3em;margin-bottom:20px;color:#1d1d1f;}
+    .options{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;}
+    .option{
+      background-color:rgba(255,255,255,.7);border:none;border-radius:16px;padding:15px;
+      font-size:1em;cursor:pointer;position:relative;overflow:hidden;text-align:center;
+      transition:background .3s ease,transform .3s ease,box-shadow .3s ease;
+      box-shadow:0 4px 8px rgba(0,0,0,.1);
+    }
+    .option:hover{background-color:#fff;box-shadow:0 8px 16px rgba(0,0,0,.2);transform:translateY(-2px);}
+    .option.selected{color:#fff;}
+    .option.disabled{pointer-events:none;}
+    .option.correct{background:linear-gradient(135deg,#34c759,#a8e6cf);color:#fff;}
+    .option.incorrect{background:linear-gradient(135deg,#ff3b30,#ff9a8b);color:#fff;}
+    .explanation{
+      margin-top:20px;font-size:1em;color:#333;background-color:rgba(255,255,255,.8);
+      border-left:5px solid;border-radius:12px;padding:15px;
+      box-shadow:0 4px 8px rgba(0,0,0,.1);display:none;opacity:0;transition:opacity .5s ease;
+    }
+    .explanation-header{display:flex;align-items:center;margin-bottom:10px;font-weight:bold;}
+    .explanation-icon{font-size:1.5em;margin-right:10px;}
+    .nav-button{
+      background:linear-gradient(135deg,#007aff,#5ac8fa);color:#fff;border:none;border-radius:12px;
+      padding:12px 24px;font-size:1em;cursor:pointer;width:100%;margin-top:20px;
+      transition:background .3s ease,transform .2s ease,box-shadow .3s ease,opacity .3s ease;
+      box-shadow:0 4px 8px rgba(0,0,0,.1);
+    }
+    .nav-button:hover{background:linear-gradient(135deg,#005bb5,#4aa0d3);box-shadow:0 8px 16px rgba(0,0,0,.2);}
+    .nav-button:disabled{background:linear-gradient(135deg,#c7c7cc,#d1d1d6);opacity:.6;cursor:not-allowed;box-shadow:none;transform:none;}
+    .nav-button:active{transform:scale(.98);}
+    .nav-button.retry-wrong{
+      background:linear-gradient(135deg,#ff9500,#ff6347);
+      margin-top:10px;
+    }
+    .nav-button.retry-wrong:hover{
+      background:linear-gradient(135deg,#cc7700,#cc5039);
+    }
+    .result-card h3{font-size:1.2em;margin-bottom:10px;}
+    .result-status{font-weight:bold;margin-bottom:10px;}
+    .correct{color:#34c759;}
+    .incorrect{color:#ff3b30;}
+    #incorrect-summary{background-color:rgba(255,235,238,.8);border:1px solid #ff3b30;border-radius:12px;padding:15px;margin-bottom:20px;}
+    #incorrect-summary h3{margin-top:0;}
+    #incorrect-summary a{display:inline-block;margin:5px;padding:5px 10px;background-color:#ff3b30;color:#fff;text-decoration:none;border-radius:8px;transition:background-color .3s;}
+    #incorrect-summary a:hover{background-color:#c50000;}
+    #attendance-link{background-color:#34c759;color:#fff;padding:15px;border-radius:12px;margin-top:20px;text-align:center;display:none;}
+    #attendance-link a{color:#fff;text-decoration:none;font-weight:bold;}
+
+    /* ---- モードバッジ ---- */
+    .mode-badge{
+      display:inline-block;
+      background:linear-gradient(135deg,#ff9500,#ff6347);
+      color:#fff;
+      padding:8px 16px;
+      border-radius:20px;
+      font-size:0.9em;
+      font-weight:bold;
+      margin-bottom:15px;
+      box-shadow:0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* ---- 成績カード ---- */
+    #summary-card{background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.4);padding:25px;}
+    .summary-grid{display:flex;align-items:center;justify-content:center;gap:30px;flex-wrap:wrap;}
+    .score-display{display:grid;place-items:center;}
+    @property --p{syntax:'<number>';inherits:true;initial-value:0;}
+    .score-circle{
+      --p:20;--b:20px;--c:#34c759;--w:180px;
+      width:var(--w);aspect-ratio:1;position:relative;display:inline-grid;margin:5px;
+      place-content:center;font-size:2.5em;font-weight:bold;animation:progress-load 1s .5s both;
+    }
+    .score-circle:before,.score-circle:after{content:"";position:absolute;border-radius:50%;}
+    .score-circle:before{
+      inset:0;
+      background:
+        radial-gradient(farthest-side,var(--c) 98%,#0000) top/var(--b) var(--b) no-repeat,
+        conic-gradient(var(--c) calc(var(--p)*1%),#0000 0);
+      -webkit-mask:radial-gradient(farthest-side,#0000 calc(99% - var(--b)),#000 calc(100% - var(--b)));
+              mask:radial-gradient(farthest-side,#0000 calc(99% - var(--b)),#000 calc(100% - var(--b)));
+    }
+    .score-circle:after{inset:calc(50% - var(--b)/2);background:var(--c);transform:rotate(calc(var(--p)*3.6deg)) translateY(calc(50% - var(--w)/2));}
+    @keyframes progress-load{from{--p:0;}}
+    .score-percentage small{font-size:.5em;color:#555;}
+    .stats-details{display:flex;flex-direction:column;gap:15px;}
+    .stat-item{display:flex;align-items:center;background-color:rgba(255,255,255,.5);border-radius:12px;padding:10px 15px;}
+    .stat-icon{font-size:1.5em;margin-right:12px;}
+    .stat-label{font-size:.9em;color:#333;margin-right:auto;}
+    .stat-value{font-size:1.2em;font-weight:bold;color:#000;}
+    .feedback-message{text-align:center;margin-top:20px;font-size:1.1em;font-weight:500;padding:10px;border-radius:10px;background-color:rgba(255,255,255,.3);}
+
+    /* ---- かわいい髑髏キャラクター ---- */
+    #skull-celebration{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      margin:30px 0;
+      animation:fadeInBounce 1s ease-out;
+    }
+    @keyframes fadeInBounce{
+      0%{opacity:0;transform:translateY(-50px) scale(0.5);}
+      60%{transform:translateY(10px) scale(1.1);}
+      100%{opacity:1;transform:translateY(0) scale(1);}
+    }
+    #skull-celebration svg{
+      width:200px;
+      height:200px;
+      filter:drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+      animation:float 3s ease-in-out infinite;
+    }
+    @keyframes float{
+      0%, 100%{transform:translateY(0px);}
+      50%{transform:translateY(-15px);}
+    }
+    #skull-celebration .celebration-text{
+      font-size:1.5em;
+      font-weight:bold;
+      color:#ff1493;
+      margin-top:20px;
+      text-shadow:2px 2px 4px rgba(0,0,0,0.2);
+      animation:textGlow 2s ease-in-out infinite;
+    }
+    @keyframes textGlow{
+      0%, 100%{text-shadow:2px 2px 4px rgba(0,0,0,0.2);}
+      50%{text-shadow:0 0 20px rgba(255,20,147,0.8), 2px 2px 4px rgba(0,0,0,0.2);}
+    }
+
+    /* ---- 紙吹雪アニメーション ---- */
+    .confetti{
+      position:fixed;
+      width:10px;
+      height:10px;
+      background:#ff1493;
+      top:-10px;
+      animation:confetti-fall 3s linear;
+      pointer-events:none;
+      z-index:9999;
+    }
+    @keyframes confetti-fall{
+      to{
+        transform:translateY(100vh) rotate(360deg);
+        opacity:0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>第5回確認テスト（健康障害１：循環障害）</h1>
+
+    <div id="quiz-container" class="quiz-container">
+      <div id="mode-indicator"></div>
+      <div id="progress-container"><div id="progress-bar"></div></div>
+      <div id="progress-info">
+        <div id="progress-text"></div>
+        <div id="timer">00:00</div>
+      </div>
+
+      <div id="quiz-content">
+        <div id="question" class="question"></div>
+        <div id="options" class="options"></div>
+        <div id="explanation" class="explanation"></div>
+      </div>
+      <button id="next" class="nav-button" disabled>次の問題</button>
+    </div>
+
+    <div id="result-container"></div>
+    <div id="attendance-link"></div>
+  </div>
+
+  <script>
+    // —— クイズデータ（循環障害）——
+    const quizData = [
+      {
+        "question":"循環器系における体循環の説明として正しいものはどれですか？",
+        "options":["右心室から肺動脈を経て肺に血液を送る経路","左心室から大動脈を経て全身に血液を送る経路","肺静脈から左心房に血液を送る経路","上大静脈から右心房に血液を送る経路"],
+        "answer":1,
+        "explanation":"体循環は左心室から大動脈を経て全身の組織に酸素と栄養を届け、静脈を通って右心房に戻ってくる経路です。肺循環は右心室から肺動脈を経て肺で酸素交換を行う経路です。"
+      },
+      {
+        "question":"スターリングの法則において、毛細血管の動脈側で水分が組織間隙に押し出される主な理由はどれですか？",
+        "options":["膠質浸透圧が血圧より高いため","血圧が膠質浸透圧より高いため","リンパ管の吸収力が低下するため","血管透過性が著しく亢進するため"],
+        "answer":1,
+        "explanation":"毛細血管の動脈側では血圧（約35mmHg）が膠質浸透圧（約25mmHg）を上回るため、差し引き約10mmHgの力で水分が組織間隙に濾過されます。静脈側では逆に血圧が低下して再吸収が起こります。"
+      },
+      {
+        "question":"門脈圧亢進症の最も危険な合併症はどれですか？",
+        "options":["脾腫","腹水","食道静脈瘤破裂","肝腫大"],
+        "answer":2,
+        "explanation":"門脈圧亢進症では側副血行路として食道静脈瘤が形成されますが、食道の静脈は薄くもろいため、破裂すると大量吐血を起こし致死的になります。これが最も危険な合併症です。"
+      },
+      {
+        "question":"充血とうっ血の違いを最も正確に説明しているものはどれですか？",
+        "options":["充血は静脈性、うっ血は動脈性の血流増加","充血は動脈性の血流増加で組織は赤色、うっ血は静脈性の血液停滞で組織は暗赤色","充血は病的、うっ血は生理的反応","充血は慢性、うっ血は急性の変化"],
+        "answer":1,
+        "explanation":"充血は動脈が拡張して血流が増加する状態で組織は鮮紅色になります。うっ血は静脈から血液が流れ出ず停滞する状態で、酸素の少ない静脈血が溜まるため組織は暗赤色になります。"
+      },
+      {
+        "question":"左心不全の患者が夜間に呼吸困難で目が覚める理由として最も適切なものはどれですか？",
+        "options":["夜間に血圧が上昇するため","仰臥位により肺全体にうっ血が広がるため","睡眠中に呼吸回数が減少するため","夜間に心拍数が増加するため"],
+        "answer":1,
+        "explanation":"左心不全では肺うっ血が生じますが、仰臥位では重力の影響が均等になり肺全体にうっ血が広がるため症状が悪化します。これを発作性夜間呼吸困難といい、起座位をとると症状が改善します。"
+      },
+      {
+        "question":"ナツメグ肝が見られる病態はどれですか？",
+        "options":["左心不全","右心不全","肝硬変","門脈圧亢進症"],
+        "answer":1,
+        "explanation":"右心不全では体静脈系に血液が滞留し、肝臓にうっ血が生じます。中心静脈周囲が暗赤色、周辺部が黄褐色となり、断面がナツメグ（肉豆蔲）に似た模様を呈します。"
+      },
+      {
+        "question":"浮腫の原因として誤っているものはどれですか？",
+        "options":["毛細血管内圧の上昇","血液膠質浸透圧の上昇","毛細血管壁の透過性亢進","リンパ液のうっ滞"],
+        "answer":1,
+        "explanation":"浮腫の4つの原因は、①毛細血管内圧の上昇、②血液膠質浸透圧の低下（上昇ではない）、③血管透過性亢進、④リンパ流障害です。膠質浸透圧が上昇すれば水分は血管内に保持されるため浮腫は生じません。"
+      },
+      {
+        "question":"ネフローゼ症候群で特徴的な浮腫の部位はどれですか？",
+        "options":["下肢","顔面・眼瞼","腹部","上肢"],
+        "answer":1,
+        "explanation":"ネフローゼ症候群では腎臓から大量のアルブミンが漏出し、血中アルブミンが低下して膠質浸透圧が低下します。特に顔面や眼瞼の浮腫が特徴的で、朝起きたときに顔がパンパンに腫れます。"
+      },
+      {
+        "question":"止血機構における一次止血とは何を指しますか？",
+        "options":["血管収縮","血小板血栓の形成","フィブリン血栓の形成","凝固因子の活性化"],
+        "answer":1,
+        "explanation":"一次止血は血小板による止血で、血管損傷部位に血小板が粘着・凝集して血小板血栓（血小板プラグ）を形成します。二次止血は凝固カスケードによるフィブリン血栓の形成です。"
+      },
+      {
+        "question":"ビタミンK欠乏で障害される凝固因子はどれですか？",
+        "options":["因子Ⅰ、Ⅴ、Ⅷ、XIII","因子Ⅱ、Ⅶ、Ⅸ、Ⅹ","因子Ⅲ、Ⅳ、Ⅺ、Ⅻ","すべての凝固因子"],
+        "answer":1,
+        "explanation":"ビタミンKは肝臓で因子Ⅱ（プロトロンビン）、Ⅶ、Ⅸ、Ⅹの合成に必須です。ビタミンK欠乏やワルファリン投与ではこれらの因子が低下し、出血傾向になります。"
+      },
+      {
+        "question":"血栓形成のウィルヒョウの三徴に含まれないものはどれですか？",
+        "options":["血管内皮細胞の障害","血流のうっ滞","血液凝固能の亢進","血小板数の減少"],
+        "answer":3,
+        "explanation":"ウィルヒョウの三徴は、①血管内皮の障害、②血流のうっ滞、③血液の凝固亢進です。血小板減少は出血傾向の原因であり、血栓形成の要因ではありません。"
+      },
+      {
+        "question":"エコノミークラス症候群（深部静脈血栓症）で最も重篤な合併症はどれですか？",
+        "options":["下肢の腫脹","下肢の疼痛","肺塞栓症","静脈瘤"],
+        "answer":2,
+        "explanation":"深部静脈血栓症で形成された血栓が遊離して肺動脈を閉塞すると肺塞栓症となり、突然の呼吸困難、胸痛、ショックを起こして致死的になりえます。これが最も重篤な合併症です。"
+      },
+      {
+        "question":"終動脈とはどのような動脈を指しますか？",
+        "options":["最も太い動脈","最も細い動脈","他の動脈との吻合（側副血行路）を持たない、または機能的に不十分な動脈","静脈と直接つながる動脈"],
+        "answer":2,
+        "explanation":"終動脈とは側副血行路を持たない、または機能的に不十分な動脈のことです。脳、心臓、腎臓などの動脈は終動脈の性質を持ち、閉塞するとその支配領域全体が梗塞になります。"
+      },
+      {
+        "question":"貧血性梗塞が起こる臓器はどれですか？",
+        "options":["肝臓","肺","脳","腸管"],
+        "answer":2,
+        "explanation":"貧血性梗塞は側副血行路のない緻密な組織（脳、心臓、腎臓）で起こり、梗塞巣は白色を呈します。肝臓や肺は二重の血液供給があるため出血性梗塞になります。"
+      },
+      {
+        "question":"狭心症と心筋梗塞の鑑別で最も重要な違いはどれですか？",
+        "options":["狭心症は可逆的虚血、心筋梗塞は不可逆的壊死","狭心症は夜間に起こり、心筋梗塞は日中に起こる","狭心症は女性に多く、心筋梗塞は男性に多い","狭心症は予後良好、心筋梗塞は必ず致死的"],
+        "answer":0,
+        "explanation":"狭心症は冠動脈の狭窄による一過性の虚血で、安静やニトログリセリンで改善する可逆的な状態です。心筋梗塞は冠動脈の完全閉塞による心筋壊死で、不可逆的な組織障害です。"
+      },
+      {
+        "question":"医学用語としてのショックを最も正確に説明しているものはどれですか？",
+        "options":["精神的に強い衝撃を受けた状態","急激な血圧低下により全身組織への血流が著しく低下し、細胞代謝が維持できなくなった状態","心臓が完全に停止した状態","意識を失った状態"],
+        "answer":1,
+        "explanation":"ショックとは、重篤な生体侵襲により有効循環血液量が減少し、血圧が低下して全身組織への血流が著しく低下し、細胞の代謝が維持できなくなった生命の危機に直結する状態です。"
+      },
+      {
+        "question":"敗血症性ショックの分類として正しいものはどれですか？",
+        "options":["循環血液量減少性ショック","心原性ショック","血液分布異常性ショック","閉塞性ショック"],
+        "answer":2,
+        "explanation":"敗血症性ショックは、細菌毒素により血管が拡張して血液が末梢に溜まり、有効循環血液量が減少する血液分布異常性ショックに分類されます。アナフィラキシーや神経原性ショックも同じ分類です。"
+      },
+      {
+        "question":"ショック時の代償機転として誤っているものはどれですか？",
+        "options":["心拍数の増加","末梢血管の拡張","レニン-アンジオテンシン-アルドステロン系の活性化","交感神経の活性化"],
+        "answer":1,
+        "explanation":"ショック時の代償機転では、交感神経が活性化して心拍数が増加し、末梢血管は収縮（拡張ではない）して血圧を維持しようとします。また、水分・ナトリウムの再吸収も促進されます。"
+      },
+      {
+        "question":"DIC（播種性血管内凝固症候群）で血栓と出血が同時に起こる理由として正しいものはどれですか？",
+        "options":["免疫系が異常に活性化するため","全身で凝固が進行して凝固因子と血小板が消費され枯渇するため","肝臓での凝固因子合成が亢進するため","腎臓での血小板産生が低下するため"],
+        "answer":1,
+        "explanation":"DICでは全身の微小血管で血栓が多発し、凝固因子と血小板が大量に消費されます（消費性凝固障害）。その結果、これらが枯渇して逆に出血傾向になるという矛盾した病態が生じます。"
+      },
+      {
+        "question":"ショック肺（ARDS）の特徴的な病理所見はどれですか？",
+        "options":["肺胞壁への硝子膜形成","肺胞内への癌細胞浸潤","肺動脈の動脈硬化","気管支の慢性炎症"],
+        "answer":0,
+        "explanation":"ショック肺（急性呼吸窮迫症候群）では、炎症により血管透過性が亢進して肺水腫が生じ、肺胞壁に硝子膜というピンク色の無構造な膜が形成されます。これによりガス交換が著しく障害されます。"
+      }
+    ];
+
+    // —— ユーティリティ —— 
+    const $ = (id) => document.getElementById(id);
+    function shuffle(array){
+      for(let i=array.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [array[i],array[j]] = [array[j],array[i]];
+      }
+      return array;
+    }
+
+    // —— 紙吹雪エフェクト —— 
+    function createConfetti(){
+      const colors = ['#ff1493','#00bfff','#ffd700','#ff6347','#98fb98','#dda0dd'];
+      for(let i=0;i<50;i++){
+        setTimeout(()=>{
+          const confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          confetti.style.left = Math.random()*100 + '%';
+          confetti.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+          confetti.style.animationDuration = (Math.random()*2 + 2) + 's';
+          confetti.style.animationDelay = Math.random()*0.5 + 's';
+          document.body.appendChild(confetti);
+          setTimeout(()=> confetti.remove(), 4000);
+        }, i*50);
+      }
+    }
+
+    // —— かわいい髑髏SVGを生成 —— 
+    function createSkullSVG(){
+      return `
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <!-- 頭蓋骨本体 -->
+          <ellipse cx="100" cy="90" rx="70" ry="75" fill="#f0f0f0" stroke="#333" stroke-width="3"/>
+          
+          <!-- 左目 -->
+          <ellipse cx="75" cy="80" rx="18" ry="22" fill="#333"/>
+          <ellipse cx="78" cy="75" rx="8" ry="10" fill="#fff" opacity="0.6"/>
+          <circle cx="80" cy="78" r="3" fill="#fff"/>
+          
+          <!-- 右目 -->
+          <ellipse cx="125" cy="80" rx="18" ry="22" fill="#333"/>
+          <ellipse cx="128" cy="75" rx="8" ry="10" fill="#fff" opacity="0.6"/>
+          <circle cx="130" cy="78" r="3" fill="#fff"/>
+          
+          <!-- 鼻 -->
+          <path d="M 95 100 L 100 110 L 105 100 Z" fill="#333"/>
+          
+          <!-- 笑顔の口 -->
+          <path d="M 70 125 Q 100 145 130 125" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
+          
+          <!-- 歯 -->
+          <rect x="75" y="123" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
+          <rect x="85" y="125" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
+          <rect x="95" y="127" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
+          <rect x="105" y="125" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
+          <rect x="115" y="123" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
+          
+          <!-- 頬の赤み -->
+          <ellipse cx="55" cy="100" rx="12" ry="10" fill="#ff69b4" opacity="0.5"/>
+          <ellipse cx="145" cy="100" rx="12" ry="10" fill="#ff69b4" opacity="0.5"/>
+          
+          <!-- 王冠 -->
+          <path d="M 50 50 L 55 35 L 60 50 L 75 30 L 90 50 L 100 25 L 110 50 L 125 30 L 140 50 L 145 35 L 150 50 Z" 
+                fill="#ffd700" stroke="#ff8c00" stroke-width="2"/>
+          
+          <!-- 王冠の宝石 -->
+          <circle cx="75" cy="40" r="4" fill="#ff1493"/>
+          <circle cx="100" cy="35" r="5" fill="#00bfff"/>
+          <circle cx="125" cy="40" r="4" fill="#ff1493"/>
+          
+          <!-- キラキラ効果 -->
+          <g opacity="0.8">
+            <path d="M 165 60 l 3 -8 l 3 8 l 8 3 l -8 3 l -3 8 l -3 -8 l -8 -3 z" fill="#ffd700">
+              <animateTransform attributeName="transform" type="rotate" 
+                from="0 168 63" to="360 168 63" dur="4s" repeatCount="indefinite"/>
+            </path>
+            <path d="M 35 70 l 2 -6 l 2 6 l 6 2 l -6 2 l -2 6 l -2 -6 l -6 -2 z" fill="#ffd700">
+              <animateTransform attributeName="transform" type="rotate" 
+                from="0 37 72" to="360 37 72" dur="3s" repeatCount="indefinite"/>
+            </path>
+          </g>
+          
+          <!-- ハート -->
+          <path d="M 100 170 C 80 150, 50 150, 50 130 C 50 110, 70 100, 100 120 C 130 100, 150 110, 150 130 C 150 150, 120 150, 100 170 Z" 
+                fill="#ff1493" stroke="#c71585" stroke-width="2" opacity="0.8">
+            <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
+          </path>
+        </svg>
+      `;
+    }
+
+    // —— 状態 —— 
+    let current = 0, score = 0, userAnswers = [];
+    let order = [];        // 全設問の並び
+    let optionOrder = [];  // 各設問ごとの選択肢インデックス並び
+    let timer = null, seconds = 0;
+    let isRetryMode = false; // 間違い直しモードフラグ
+    let wrongQuestions = []; // 間違えた問題のインデックスリスト
+    let retryHistory = {}; // 各問題の復習履歴を保存
+
+    function startTimer(){
+      if(timer) clearInterval(timer);
+      seconds = 0; $('timer').textContent = '00:00';
+      timer = setInterval(()=>{
+        seconds++;
+        const m = String(Math.floor(seconds/60)).padStart(2,'0');
+        const s = String(seconds%60).padStart(2,'0');
+        $('timer').textContent = `${m}:${s}`;
+      },1000);
+    }
+
+    function initQuiz(retryMode = false, retryQuestions = []){
+      isRetryMode = retryMode;
+      
+      if(isRetryMode){
+        // 間違い直しモード
+        order = shuffle([...retryQuestions]);
+        $('mode-indicator').innerHTML = '<div class="mode-badge">🔄 間違い直しモード</div>';
+      } else {
+        // 通常モード
+        order = shuffle([...Array(quizData.length).keys()]);
+        $('mode-indicator').innerHTML = '';
+        retryHistory = {}; // 履歴リセット
+      }
+      
+      // 各設問の選択肢インデックスをシャッフル
+      optionOrder = order.map(qi => shuffle([0,1,2,3]));
+      userAnswers = Array(quizData.length).fill(null);
+      current = 0; score = 0;
+      startTimer();
+      renderQuestion();
+    }
+
+    function renderQuestion(){
+      const qIndex = order[current];
+      const q = quizData[qIndex];
+
+      // 進捗
+      const prog = ((current+1)/order.length)*100;
+      $('progress-bar').style.width = `${prog}%`;
+      $('progress-text').textContent = `${current+1} / ${order.length} 問`;
+
+      // 本文
+      $('question').textContent = q.question;
+
+      // 選択肢（indexで安全にハンドリング）
+      const idxOrder = optionOrder[current];
+      $('options').innerHTML = idxOrder.map((optIdx,i)=>(
+        `<button class="option" data-opt="${optIdx}" onclick="selectOption(${optIdx}, this)">${q.options[optIdx]}</button>`
+      )).join('');
+
+      // 解説リセット
+      const exp = $('explanation');
+      exp.style.display='none'; exp.style.opacity='0'; exp.innerHTML='';
+      $('next').disabled = true;
+    }
+
+    window.selectOption = function(originalOptionIndex, el){
+      // 全て無効化
+      document.querySelectorAll('.option').forEach(o=>o.classList.add('disabled'));
+      el.classList.add('selected');
+
+      const qIndex = order[current];
+      const q = quizData[qIndex];
+      const isCorrect = (originalOptionIndex === q.answer);
+      userAnswers[qIndex] = originalOptionIndex;
+      
+      // 復習履歴を記録
+      if(isRetryMode){
+        if(!retryHistory[qIndex]) retryHistory[qIndex] = [];
+        retryHistory[qIndex].push(isCorrect);
+      }
+      
+      if(isCorrect){ el.classList.add('correct'); score++; }
+      else{
+        el.classList.add('incorrect');
+        // 正解に色
+        document.querySelectorAll('.option').forEach(o=>{
+          const idx = Number(o.getAttribute('data-opt'));
+          if(idx === q.answer){ o.classList.add('correct'); }
+        });
+      }
+
+      const exp = $('explanation');
+      exp.innerHTML = `
+        <div class="explanation-header" style="color:${isCorrect ? '#4caf50' : '#f44336'};">
+          <span class="explanation-icon">💡</span>解説
+        </div>
+        ${q.explanation}
+      `;
+      exp.style.borderLeftColor = isCorrect ? '#4caf50' : '#f44336';
+      exp.style.display='block';
+      requestAnimationFrame(()=> exp.style.opacity='1');
+
+      $('next').disabled = false;
+    };
+
+    $('next').addEventListener('click', ()=>{
+      if(current < order.length-1){ current++; renderQuestion(); }
+      else{ showResult(); }
+    });
+
+    function showResult(){
+      clearInterval(timer);
+      const finalTime = $('timer').textContent;
+      $('quiz-container').style.display = 'none';
+
+      const total = order.length;
+      const pct = (score/total)*100;
+      let color = '#34c759', msg = '素晴らしい成績です！この調子で学習を続けましょう。';
+      if(pct < 40){ color = '#ff3b30'; msg = 'お疲れ様でした！間違えた問題を中心にしっかり復習しましょう。'; }
+      else if(pct < 80){ color = '#ff9500'; msg = 'あと一歩！間違えた箇所を復習すれば、さらに実力がアップします。'; }
+      
+      let skullHTML = '';
+      if(pct === 100){ 
+        msg = '完璧です！素晴らしい集中力と知識です。おめでとうございます！';
+        createConfetti(); // 紙吹雪エフェクト
+        skullHTML = `
+          <div id="skull-celebration">
+            ${createSkullSVG()}
+            <div class="celebration-text">🎉 パーフェクト！ 🎉</div>
+          </div>
+        `;
+      }
+
+      // 成績サマリー
+      const modeText = isRetryMode ? ' (間違い直しモード)' : '';
+      const summary = `
+        <div class="result-card" id="summary-card">
+          ${skullHTML}
+          <div class="summary-grid">
+            <div class="score-display">
+              <div class="score-circle" style="--p:${pct.toFixed(1)}; --c:${color};">
+                <span class="score-percentage">${Math.round(pct)}<small>%</small></span>
+              </div>
+            </div>
+            <div class="stats-details">
+              <div class="stat-item"><span class="stat-icon">✅</span><span class="stat-label">正解数</span><span class="stat-value">${score} / ${total}${modeText}</span></div>
+              <div class="stat-item"><span class="stat-icon">⏱️</span><span class="stat-label">所要時間</span><span class="stat-value">${finalTime}</span></div>
+            </div>
+          </div>
+          <p class="feedback-message" style="color:${color};">${msg}</p>
+        </div>
+      `;
+
+      // 間違い一覧
+      wrongQuestions = [];
+      order.forEach((qIndex)=>{
+        if(userAnswers[qIndex] === null) return;
+        if(userAnswers[qIndex] !== quizData[qIndex].answer){
+          wrongQuestions.push(qIndex);
+        }
+      });
+
+      let html = `<h2>クイズ結果</h2>${summary}`;
+      
+      // 間違い直しボタン
+      if(wrongQuestions.length > 0){
+        html += `
+          <div id="incorrect-summary">
+            <h3>要復習の問題（${wrongQuestions.length}問）</h3>
+            ${wrongQuestions.map(qi=>`<a href="#result-q-${qi+1}">問${qi+1}</a>`).join('')}
+            <button class="nav-button retry-wrong" onclick="retryWrongQuestions()">❌ 間違えた問題だけやり直す</button>
+          </div>
+        `;
+      }
+
+      // 各問のレビュー
+      order.forEach((qIndex)=>{
+        const q = quizData[qIndex];
+        const ua = userAnswers[qIndex];
+        const ok = (ua === q.answer);
+        
+        // 復習履歴表示
+        let historyHTML = '';
+        if(retryHistory[qIndex] && retryHistory[qIndex].length > 0){
+          const historyIcons = retryHistory[qIndex].map(correct => 
+            correct ? '✅' : '❌'
+          ).join(' ');
+          historyHTML = `<p><strong>復習履歴:</strong> ${historyIcons}</p>`;
+        }
+        
+        html += `
+          <div class="result-card" id="result-q-${qIndex+1}">
+            <h3>問題 ${qIndex+1}</h3>
+            <p class="result-status ${ok ? 'correct':'incorrect'}">${ok ? '✅ 正解':'❌ 不正解'}</p>
+            ${historyHTML}
+            <p><strong>質問:</strong> ${q.question}</p>
+            <p><strong>あなたの回答:</strong> ${ua !== null ? q.options[ua] : '未回答'}</p>
+            <p><strong>正解:</strong> ${q.options[q.answer]}</p>
+            <p><strong>説明:</strong> ${q.explanation}</p>
+          </div>
+        `;
+      });
+
+      html += `<button class="nav-button" onclick="restartQuiz()">🔄 全問題をもう一度挑戦する</button>`;
+      $('result-container').innerHTML = html;
+
+      if(pct === 100 && !isRetryMode){
+        const a = $('attendance-link');
+        a.style.display = 'block';
+        a.innerHTML = `<p>おめでとうございます！全問正解です。</p>
+          <a href="https://forms.gle/Uun3fT1xUG7bybSB6" target="_blank" rel="noopener">出席確認フォームに回答する</a>`;
+      }
+    }
+
+    window.restartQuiz = function(){
+      $('quiz-container').style.display = 'block';
+      $('result-container').innerHTML = '';
+      $('attendance-link').style.display = 'none';
+      initQuiz(false);
+    };
+
+    window.retryWrongQuestions = function(){
+      if(wrongQuestions.length === 0){
+        alert('間違えた問題がありません！');
+        return;
+      }
+      $('quiz-container').style.display = 'block';
+      $('result-container').innerHTML = '';
+      $('attendance-link').style.display = 'none';
+      initQuiz(true, wrongQuestions);
+    };
+
+    // 起動
+    initQuiz();
+  </script>
+</body>
+</html>
