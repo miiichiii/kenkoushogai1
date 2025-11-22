@@ -1,1 +1,127 @@
-hello
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>確認テスト一覧</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-grad:linear-gradient(135deg,#a8edea,#fed6e3);
+      --card-bg:rgba(255,255,255,0.22);
+      --card-border:rgba(255,255,255,0.35);
+      --shadow:0 10px 24px rgba(0,0,0,0.2);
+      --accent:#007aff;
+      --accent2:#5ac8fa;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;padding:24px;
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,'Open Sans','Helvetica Neue',sans-serif;
+      background:var(--bg-grad);
+      background-size:cover;background-repeat:no-repeat;background-attachment:fixed;
+      color:#1d1d1f;
+      line-height:1.6;
+    }
+    .container{max-width:1000px;margin:0 auto;}
+    h1,h2{font-family:'Noto Sans JP',sans-serif;font-weight:700;margin:0;text-align:center;}
+    h1{font-size:2rem;color:#0f172a;text-shadow:0 3px 10px rgba(0,0,0,0.18);}
+    p.lead{text-align:center;margin:12px 0 24px;color:#1f2937;}
+
+    .grid{
+      display:grid;
+      gap:16px;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    }
+    .card{
+      background:var(--card-bg);
+      border:1px solid var(--card-border);
+      backdrop-filter:blur(8px);
+      border-radius:16px;
+      padding:18px;
+      box-shadow:var(--shadow);
+      transition:transform .2s ease,box-shadow .2s ease,background .3s ease;
+    }
+    .card:hover{transform:translateY(-3px);box-shadow:0 14px 28px rgba(0,0,0,0.25);background:rgba(255,255,255,0.3);}
+    .tag{
+      display:inline-flex;align-items:center;gap:6px;
+      font-size:0.9em;font-weight:700;
+      color:#0f172a;background:rgba(255,255,255,0.7);
+      border-radius:999px;padding:6px 12px;
+      border:1px solid rgba(255,255,255,0.4);
+      margin-bottom:10px;
+    }
+    .title{font-size:1.2em;margin:6px 0 10px;}
+    .desc{font-size:0.95em;color:#1f2937;margin:0 0 14px;}
+    .btn{
+      display:inline-block;
+      width:100%;
+      text-align:center;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#fff;text-decoration:none;font-weight:700;
+      border:none;border-radius:12px;
+      padding:12px 14px;
+      box-shadow:0 6px 14px rgba(0,0,0,0.16);
+      transition:transform .15s ease,box-shadow .2s ease;
+    }
+    .btn:hover{transform:translateY(-1px);box-shadow:0 10px 18px rgba(0,0,0,0.18);}
+    .btn:active{transform:translateY(0);}
+
+    @media (max-width:600px){
+      body{padding:16px;}
+      h1{font-size:1.6rem;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>確認テストポータル</h1>
+    <p class="lead">健康障害シリーズの各回クイズにアクセスできます。好きな回を選んでスタート！</p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="tag">第1回</div>
+        <div class="title">クイズ 1</div>
+        <p class="desc">健康障害1：導入クイズ。</p>
+        <a class="btn" href="1st.test.html">▶ 開く</a>
+      </div>
+      <div class="card">
+        <div class="tag">第2回</div>
+        <div class="title">クイズ 2</div>
+        <p class="desc">健康障害1：第2回クイズ。</p>
+        <a class="btn" href="2nd.test.html">▶ 開く</a>
+      </div>
+      <div class="card">
+        <div class="tag">第3回</div>
+        <div class="title">クイズ 3</div>
+        <p class="desc">健康障害1：第3回クイズ。</p>
+        <a class="btn" href="3rd.test.html">▶ 開く</a>
+      </div>
+      <div class="card">
+        <div class="tag">第4回</div>
+        <div class="title">クイズ 4</div>
+        <p class="desc">健康障害1：第4回クイズ。</p>
+        <a class="btn" href="4th.test.html">▶ 開く</a>
+      </div>
+      <div class="card">
+        <div class="tag">第5回</div>
+        <div class="title">クイズ 5</div>
+        <p class="desc">健康障害1：第5回クイズ。</p>
+        <a class="btn" href="5th.test.html">▶ 開く</a>
+      </div>
+      <div class="card">
+        <div class="tag">第6回</div>
+        <div class="title">クイズ 6</div>
+        <p class="desc">健康障害2：循環障害クイズ。</p>
+        <a class="btn" href="6th.test.html">▶ 開く</a>
+      </div>
+      <div class="card">
+        <div class="tag">第7回</div>
+        <div class="title">クイズ 7</div>
+        <p class="desc">健康障害1：腫瘍クイズ。</p>
+        <a class="btn" href="7th.test.html">▶ 開く</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

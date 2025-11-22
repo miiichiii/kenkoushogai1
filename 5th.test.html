@@ -12,9 +12,19 @@
       background:linear-gradient(135deg,#a8edea,#fed6e3);
       background-size:cover;background-repeat:no-repeat;background-attachment:fixed;
       padding:20px;margin:0;
+      transition:background .3s ease,color .3s ease;
     }
     .container{max-width:800px;margin:0 auto;}
     h1,h2{font-family:'Noto Sans JP',sans-serif;font-weight:700;text-align:center;}
+    .toolbar{display:flex;justify-content:flex-end;margin-bottom:12px;gap:10px;}
+    .theme-toggle{
+      background:linear-gradient(135deg,#111827,#1f2937);
+      color:#f9fafb;border:1px solid rgba(255,255,255,0.12);
+      border-radius:999px;padding:8px 14px;font-size:.95em;
+      cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.25);
+      transition:transform .2s ease,box-shadow .2s ease,background .3s ease;
+    }
+    .theme-toggle:hover{transform:translateY(-1px);box-shadow:0 8px 16px rgba(0,0,0,0.3);}
     .quiz-container,.result-card{
       background-color:rgba(255,255,255,0.2);
       backdrop-filter:blur(10px);
@@ -168,10 +178,35 @@
         opacity:0;
       }
     }
+
+    /* ---- ダークテーマ ---- */
+    .dark-theme{
+      color:#e5e7eb;
+      background:radial-gradient(ellipse at top,#1f2937 0%,#0b1220 55%,#050912 100%);
+    }
+    .dark-theme h1,.dark-theme h2{color:#f3f4f6;}
+    .dark-theme .quiz-container,
+    .dark-theme .result-card,
+    .dark-theme #summary-card{background-color:rgba(17,24,39,0.55);border-color:rgba(255,255,255,0.08);box-shadow:0 10px 30px rgba(0,0,0,0.45);}
+    .dark-theme #progress-container{background-color:rgba(255,255,255,0.08);}
+    .dark-theme #progress-info{color:#e5e7eb;}
+    .dark-theme .question{color:#f3f4f6;}
+    .dark-theme .option{background-color:rgba(255,255,255,0.08);color:#e5e7eb;box-shadow:0 6px 14px rgba(0,0,0,0.25);}
+    .dark-theme .option:hover{background-color:rgba(255,255,255,0.16);}
+    .dark-theme .explanation{background-color:rgba(255,255,255,0.08);color:#e5e7eb;}
+    .dark-theme .nav-button{background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 8px 18px rgba(0,0,0,0.35);}
+    .dark-theme .nav-button:disabled{background:linear-gradient(135deg,#4b5563,#6b7280);}
+    .dark-theme #incorrect-summary{background-color:rgba(255,82,82,0.08);border-color:#ff6b6b;}
+    .dark-theme #incorrect-summary a{background-color:#ef4444;}
+    .dark-theme #attendance-link{background-color:#22c55e;}
+    .dark-theme .theme-toggle{background:linear-gradient(135deg,#fcd34d,#f59e0b);color:#111827;border-color:rgba(0,0,0,0.2);}
   </style>
 </head>
 <body>
   <div class="container">
+    <div class="toolbar">
+      <button id="theme-toggle" class="theme-toggle">🌙 ダークモード</button>
+    </div>
     <h1>第5回確認テスト（健康障害１：循環障害）</h1>
 
     <div id="quiz-container" class="quiz-container">
@@ -327,6 +362,27 @@
         [array[i],array[j]] = [array[j],array[i]];
       }
       return array;
+    }
+
+    // —— テーマ切り替え —— 
+    const themeToggle = $('theme-toggle');
+    function applyTheme(mode){
+      const isDark = (mode === 'dark');
+      document.body.classList.toggle('dark-theme', isDark);
+      if(themeToggle){
+        themeToggle.textContent = isDark ? '☀️ ライトモード' : '🌙 ダークモード';
+      }
+      localStorage.setItem('quiz-theme', isDark ? 'dark' : 'light');
+    }
+    function initTheme(){
+      const saved = localStorage.getItem('quiz-theme');
+      applyTheme(saved === 'dark' ? 'dark' : 'light');
+      if(themeToggle){
+        themeToggle.addEventListener('click', ()=>{
+          const next = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
+          applyTheme(next);
+        });
+      }
     }
 
     // —— 紙吹雪エフェクト —— 
@@ -644,6 +700,7 @@
     };
 
     // 起動
+    initTheme();
     initQuiz();
   </script>
 </body>
