@@ -13,6 +13,7 @@
       --shadow:0 10px 24px rgba(0,0,0,0.2);
       --accent:#007aff;
       --accent2:#5ac8fa;
+      --text:#1d1d1f;
     }
     *{box-sizing:border-box;}
     body{
@@ -20,8 +21,9 @@
       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,'Open Sans','Helvetica Neue',sans-serif;
       background:var(--bg-grad);
       background-size:cover;background-repeat:no-repeat;background-attachment:fixed;
-      color:#1d1d1f;
+      color:var(--text);
       line-height:1.6;
+      transition:background .3s ease,color .3s ease;
     }
     .container{max-width:1000px;margin:0 auto;}
     h1,h2{font-family:'Noto Sans JP',sans-serif;font-weight:700;margin:0;text-align:center;}
@@ -67,6 +69,29 @@
     .btn:hover{transform:translateY(-1px);box-shadow:0 10px 18px rgba(0,0,0,0.18);}
     .btn:active{transform:translateY(0);}
 
+    .toolbar{display:flex;justify-content:flex-end;margin-bottom:16px;}
+    .theme-toggle{
+      background:linear-gradient(135deg,#111827,#1f2937);
+      color:#f9fafb;border:1px solid rgba(255,255,255,0.12);
+      border-radius:999px;padding:9px 15px;font-size:.95em;
+      cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.25);
+      transition:transform .2s ease,box-shadow .2s ease,background .3s ease;
+    }
+    .theme-toggle:hover{transform:translateY(-1px);box-shadow:0 8px 16px rgba(0,0,0,0.3);}
+
+    /* ---- ダークテーマ ---- */
+    .dark-theme{
+      --bg-grad:radial-gradient(ellipse at top,#1f2937 0%,#0b1220 55%,#050912 100%);
+      --card-bg:rgba(17,24,39,0.5);
+      --card-border:rgba(255,255,255,0.08);
+      --shadow:0 12px 26px rgba(0,0,0,0.4);
+      --text:#e5e7eb;
+    }
+    .dark-theme h1{color:#e5e7eb;text-shadow:0 3px 10px rgba(0,0,0,0.35);}
+    .dark-theme p.lead{color:#e5e7eb;}
+    .dark-theme .btn{box-shadow:0 8px 18px rgba(0,0,0,0.35);}
+    .dark-theme .theme-toggle{background:linear-gradient(135deg,#fcd34d,#f59e0b);color:#111827;border-color:rgba(0,0,0,0.2);}
+
     @media (max-width:600px){
       body{padding:16px;}
       h1{font-size:1.6rem;}
@@ -75,6 +100,9 @@
 </head>
 <body>
   <div class="container">
+    <div class="toolbar">
+      <button id="theme-toggle" class="theme-toggle">🌙 ダークモード</button>
+    </div>
     <h1>確認テストポータル</h1>
     <p class="lead">健康障害シリーズの各回クイズにアクセスできます。好きな回を選んでスタート！</p>
 
@@ -123,5 +151,27 @@
       </div>
     </div>
   </div>
+  <script>
+    const themeToggle = document.getElementById('theme-toggle');
+    function applyTheme(mode){
+      const isDark = (mode === 'dark');
+      document.body.classList.toggle('dark-theme', isDark);
+      if(themeToggle){
+        themeToggle.textContent = isDark ? '☀️ ライトモード' : '🌙 ダークモード';
+      }
+      localStorage.setItem('quiz-theme', isDark ? 'dark' : 'light');
+    }
+    function initTheme(){
+      const saved = localStorage.getItem('quiz-theme');
+      applyTheme(saved === 'dark' ? 'dark' : 'light');
+      if(themeToggle){
+        themeToggle.addEventListener('click', ()=>{
+          const next = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
+          applyTheme(next);
+        });
+      }
+    }
+    initTheme();
+  </script>
 </body>
 </html>
