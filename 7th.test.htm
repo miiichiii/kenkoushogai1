@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>第７回確認テスト（健康障害1：腫瘍です）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,'Open Sans','Helvetica Neue',sans-serif;
+      line-height:1.6;color:#333;
+      background:linear-gradient(135deg,#a8edea,#fed6e3);
+      background-size:cover;background-repeat:no-repeat;background-attachment:fixed;
+      padding:20px;margin:0;
+    }
+    .container{max-width:800px;margin:0 auto;}
+    h1,h2{font-family:'Noto Sans JP',sans-serif;font-weight:700;text-align:center;}
+    .quiz-container,.result-card{
+      background-color:rgba(255,255,255,0.2);
+      backdrop-filter:blur(10px);
+      border-radius:16px;padding:20px;margin-bottom:20px;
+      border:1px solid rgba(255,255,255,0.3);
+      box-shadow:0 8px 24px rgba(0,0,0,0.2);
+    }
+    #progress-container{width:100%;background-color:rgba(255,255,255,0.3);border-radius:10px;margin-bottom:5px;padding:4px;}
+    #progress-bar{height:12px;width:0%;background:linear-gradient(135deg,#007aff,#5ac8fa);border-radius:6px;transition:width .4s ease-in-out;}
+    #progress-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:0 5px;font-weight:bold;font-size:.9em;color:#1d1d1f;}
+    .question{font-size:1.3em;margin-bottom:20px;color:#1d1d1f;}
+    .options{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;}
+    .option{
+      background-color:rgba(255,255,255,.7);border:none;border-radius:16px;padding:15px;
+      font-size:1em;cursor:pointer;position:relative;overflow:hidden;text-align:center;
+      transition:background .3s ease,transform .3s ease,box-shadow .3s ease;
+      box-shadow:0 4px 8px rgba(0,0,0,.1);
+    }
+    .option:hover{background-color:#fff;box-shadow:0 8px 16px rgba(0,0,0,.2);transform:translateY(-2px);}
+    .option.selected{color:#fff;}
+    .option.disabled{pointer-events:none;}
+    .option.correct{background:linear-gradient(135deg,#34c759,#a8e6cf);color:#fff;}
+    .option.incorrect{background:linear-gradient(135deg,#ff3b30,#ff9a8b);color:#fff;}
+    .explanation{
+      margin-top:20px;font-size:1em;color:#333;background-color:rgba(255,255,255,.8);
+      border-left:5px solid;border-radius:12px;padding:15px;
+      box-shadow:0 4px 8px rgba(0,0,0,.1);display:none;opacity:0;transition:opacity .5s ease;
+    }
+    .explanation-header{display:flex;align-items:center;margin-bottom:10px;font-weight:bold;}
+    .explanation-icon{font-size:1.5em;margin-right:10px;}
+    .nav-button{
+      background:linear-gradient(135deg,#007aff,#5ac8fa);color:#fff;border:none;border-radius:12px;
+      padding:12px 24px;font-size:1em;cursor:pointer;width:100%;margin-top:20px;
+      transition:background .3s ease,transform .2s ease,box-shadow .3s ease,opacity .3s ease;
+      box-shadow:0 4px 8px rgba(0,0,0,.1);
+    }
+    .nav-button:hover{background:linear-gradient(135deg,#005bb5,#4aa0d3);box-shadow:0 8px 16px rgba(0,0,0,.2);}
+    .nav-button:disabled{background:linear-gradient(135deg,#c7c7cc,#d1d1d6);opacity:.6;cursor:not-allowed;box-shadow:none;transform:none;}
+    .nav-button:active{transform:scale(.98);}
+    .nav-button.retry-wrong{
+      background:linear-gradient(135deg,#ff9500,#ff6347);
+      margin-top:10px;
+    }
+    .nav-button.retry-wrong:hover{
+      background:linear-gradient(135deg,#cc7700,#cc5039);
+    }
+    .result-card h3{font-size:1.2em;margin-bottom:10px;}
+    .result-status{font-weight:bold;margin-bottom:10px;}
+    .correct{color:#34c759;}
+    .incorrect{color:#ff3b30;}
+    #incorrect-summary{background-color:rgba(255,235,238,.8);border:1px solid #ff3b30;border-radius:12px;padding:15px;margin-bottom:20px;}
+    #incorrect-summary h3{margin-top:0;}
+    #incorrect-summary a{display:inline-block;margin:5px;padding:5px 10px;background-color:#ff3b30;color:#fff;text-decoration:none;border-radius:8px;transition:background-color .3s;}
+    #incorrect-summary a:hover{background-color:#c50000;}
+    #attendance-link{background-color:#34c759;color:#fff;padding:15px;border-radius:12px;margin-top:20px;text-align:center;display:none;}
+    #attendance-link a{color:#fff;text-decoration:none;font-weight:bold;}
+
+    /* ---- モードバッジ ---- */
+    .mode-badge{
+      display:inline-block;
+      background:linear-gradient(135deg,#ff9500,#ff6347);
+      color:#fff;
+      padding:8px 16px;
+      border-radius:20px;
+      font-size:0.9em;
+      font-weight:bold;
+      margin-bottom:15px;
+      box-shadow:0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* ---- 成績カード ---- */
+    #summary-card{background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.4);padding:25px;}
+    .summary-grid{display:flex;align-items:center;justify-content:center;gap:30px;flex-wrap:wrap;}
+    .score-display{display:grid;place-items:center;}
+    @property --p{syntax:'<number>';inherits:true;initial-value:0;}
+    .score-circle{
+      --p:20;--b:20px;--c:#34c759;--w:180px;
+      width:var(--w);aspect-ratio:1;position:relative;display:inline-grid;margin:5px;
+      place-content:center;font-size:2.5em;font-weight:bold;animation:progress-load 1s .5s both;
+    }
+    .score-circle:before,.score-circle:after{content:"";position:absolute;border-radius:50%;}
+    .score-circle:before{
+      inset:0;
+      background:
+        radial-gradient(farthest-side,var(--c) 98%,#0000) top/var(--b) var(--b) no-repeat,
+        conic-gradient(var(--c) calc(var(--p)*1%),#0000 0);
+      -webkit-mask:radial-gradient(farthest-side,#0000 calc(99% - var(--b)),#000 calc(100% - var(--b)));
+              mask:radial-gradient(farthest-side,#0000 calc(99% - var(--b)),#000 calc(100% - var(--b)));
+    }
+    .score-circle:after{inset:calc(50% - var(--b)/2);background:var(--c);transform:rotate(calc(var(--p)*3.6deg)) translateY(calc(50% - var(--w)/2));}
+    @keyframes progress-load{from{--p:0;}}
+    .score-percentage small{font-size:.5em;color:#555;}
+    .stats-details{display:flex;flex-direction:column;gap:15px;}
+    .stat-item{display:flex;align-items:center;background-color:rgba(255,255,255,.5);border-radius:12px;padding:10px 15px;}
+    .stat-icon{font-size:1.5em;margin-right:12px;}
+    .stat-label{font-size:.9em;color:#333;margin-right:auto;}
+    .stat-value{font-size:1.2em;font-weight:bold;color:#000;}
+    .feedback-message{text-align:center;margin-top:20px;font-size:1.1em;font-weight:500;padding:10px;border-radius:10px;background-color:rgba(255,255,255,.3);}
+
+    /* ---- かわいい髑髏キャラクター ---- */
+    #skull-celebration{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      margin:30px 0;
+      animation:fadeInBounce 1s ease-out;
+    }
+    @keyframes fadeInBounce{
+      0%{opacity:0;transform:translateY(-50px) scale(0.5);}
+      60%{transform:translateY(10px) scale(1.1);}
+      100%{opacity:1;transform:translateY(0) scale(1);}
+    }
+    #skull-celebration svg{
+      width:200px;
+      height:200px;
+      filter:drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+      animation:float 3s ease-in-out infinite;
+    }
+    @keyframes float{
+      0%, 100%{transform:translateY(0px);}
+      50%{transform:translateY(-15px);}
+    }
+    #skull-celebration .celebration-text{
+      font-size:1.5em;
+      font-weight:bold;
+      color:#ff1493;
+      margin-top:20px;
+      text-shadow:2px 2px 4px rgba(0,0,0,0.2);
+      animation:textGlow 2s ease-in-out infinite;
+    }
+    @keyframes textGlow{
+      0%, 100%{text-shadow:2px 2px 4px rgba(0,0,0,0.2);}
+      50%{text-shadow:0 0 20px rgba(255,20,147,0.8), 2px 2px 4px rgba(0,0,0,0.2);}
+    }
+
+    /* ---- 紙吹雪アニメーション ---- */
+    .confetti{
+      position:fixed;
+      width:10px;
+      height:10px;
+      background:#ff1493;
+      top:-10px;
+      animation:confetti-fall 3s linear;
+      pointer-events:none;
+      z-index:9999;
+    }
+    @keyframes confetti-fall{
+      to{
+        transform:translateY(100vh) rotate(360deg);
+        opacity:0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>第７回確認テスト（健康障害1：腫瘍）</h1>
+
+    <div id="quiz-container" class="quiz-container">
+      <div id="mode-indicator"></div>
+      <div id="progress-container"><div id="progress-bar"></div></div>
+      <div id="progress-info">
+        <div id="progress-text"></div>
+        <div id="timer">00:00</div>
+      </div>
+
+      <div id="quiz-content">
+        <div id="question" class="question"></div>
+        <div id="options" class="options"></div>
+        <div id="explanation" class="explanation"></div>
+      </div>
+      <button id="next" class="nav-button" disabled>次の問題</button>
+    </div>
+
+    <div id="result-container"></div>
+    <div id="attendance-link"></div>
+  </div>
+
+  <script>
+    // —— クイズデータ（腫瘍）——
+    const quizData = [
+  {
+    "question": "腫瘍の定義として正しいものはどれですか?",
+    "options": [
+      "細胞が他律的に一時的に増殖する",
+      "細胞が自律的に過剰に増殖し、単クローン性である",
+      "細胞が炎症反応により増殖する",
+      "細胞が再生過程で増殖する"
+    ],
+    "answer": 1,
+    "explanation": "腫瘍とは、細胞が自律的に(外部シグナルに依存せず)過剰に増殖し、かつ単一の細胞に由来する(単クローン性)病変です。炎症や創傷治癒における細胞増殖は他律性で一時的なものです。"
+  },
+  {
+    "question": "悪性腫瘍細胞の細胞異型として正しくないものはどれですか?",
+    "options": [
+      "細胞の大型化",
+      "核の縮小とN/C比の減少",
+      "核小体の増加",
+      "異常な核分裂像"
+    ],
+    "answer": 1,
+    "explanation": "悪性腫瘍細胞では核が増大し、N/C比(核/細胞質比)が増加します。核の縮小とN/C比の減少は細胞異型の特徴ではありません。その他の選択肢はすべて悪性腫瘍細胞の典型的な特徴です。"
+  },
+  {
+    "question": "がんの分化度について正しい記述はどれですか?",
+    "options": [
+      "低分化がんは正常組織によく似ている",
+      "高分化がんは発生母地との違いが大きい",
+      "低分化がんほど一般に悪性度が高い",
+      "分化度は予後と関係がない"
+    ],
+    "answer": 2,
+    "explanation": "低分化がんは正常組織との違いが大きく、細胞異型が強く、一般に悪性度が高く予後不良です。高分化がんは発生母地によく似ており、比較的予後良好です。分化度は治療方針や予後判定の重要な指標です。"
+  },
+  {
+    "question": "良性腫瘍の特徴として正しいものはどれですか?",
+    "options": [
+      "増殖速度が速く浸潤性に発育する",
+      "遠隔転移を起こす",
+      "被膜に包まれ膨張性発育を示す",
+      "細胞異型が著明である"
+    ],
+    "answer": 2,
+    "explanation": "良性腫瘍は増殖速度が遅く、被膜に包まれて膨張性発育を示し、周囲組織を圧排しますが浸潤や転移はしません。細胞異型も軽度です。完全切除できれば再発しません。"
+  },
+  {
+    "question": "上皮性悪性腫瘍の名称として正しいものはどれですか?",
+    "options": [
+      "脂肪肉腫",
+      "腺癌",
+      "平滑筋腫",
+      "骨肉腫"
+    ],
+    "answer": 1,
+    "explanation": "上皮性悪性腫瘍は「〜癌(がん)」と命名されます。腺癌は腺上皮由来の悪性腫瘍です。脂肪肉腫や骨肉腫は非上皮性悪性腫瘍(肉腫)、平滑筋腫は非上皮性良性腫瘍です。"
+  },
+  {
+    "question": "癌腫と肉腫の違いについて正しい記述はどれですか?",
+    "options": [
+      "癌腫は血行性転移が主体である",
+      "肉腫は成人に圧倒的に多い",
+      "癌腫はリンパ行性転移が主体である",
+      "肉腫は全悪性腫瘍の約90%を占める"
+    ],
+    "answer": 2,
+    "explanation": "癌腫(上皮性悪性腫瘍)はリンパ行性転移が主体で、成人に多く、全悪性腫瘍の約90%を占めます。肉腫(非上皮性悪性腫瘍)は血行性転移が主体で、小児期にも発生し、比較的まれです。"
+  },
+  {
+    "question": "胃の腺組織から発生した悪性腫瘍の正しい名称はどれですか?",
+    "options": [
+      "胃肉腫",
+      "胃腺腫",
+      "胃腺癌",
+      "胃平滑筋腫"
+    ],
+    "answer": 2,
+    "explanation": "腺組織由来の悪性腫瘍は「腺癌」と命名されます。胃の腺組織由来なら「胃腺癌」です。腺腫は良性、肉腫は非上皮性悪性腫瘍、平滑筋腫は筋組織由来の良性腫瘍です。"
+  },
+  {
+    "question": "がんの本質について正しい記述はどれですか?",
+    "options": [
+      "純粋に環境要因のみで発生する",
+      "遺伝的素因と外因による遺伝子の病気",
+      "感染症のみが原因である",
+      "加齢のみで必ず発生する"
+    ],
+    "answer": 1,
+    "explanation": "がんは「遺伝的素因と外因による遺伝子の病気」です。生まれ持った遺伝的背景と、環境要因や生活習慣などの外因が組み合わさって、細胞の遺伝子に異常が蓄積することで発生します。"
+  },
+  {
+    "question": "原がん遺伝子について正しい記述はどれですか?",
+    "options": [
+      "正常状態では細胞増殖や分化に必要な遺伝子である",
+      "生まれつき異常な遺伝子である",
+      "すべての人が持っていない特殊な遺伝子である",
+      "細胞増殖を常に抑制する遺伝子である"
+    ],
+    "answer": 0,
+    "explanation": "原がん遺伝子は、正常状態では細胞増殖、分化、生存に必要な遺伝子です。すべての人が持っています。変異や過剰発現により「がん遺伝子」となり、細胞増殖が暴走します。"
+  },
+  {
+    "question": "原がん遺伝子ががん遺伝子になるメカニズムとして正しくないものはどれですか?",
+    "options": [
+      "点変異",
+      "遺伝子増幅",
+      "染色体転座",
+      "遺伝子の完全欠失"
+    ],
+    "answer": 3,
+    "explanation": "原がん遺伝子ががん遺伝子化する主なメカニズムは、点変異(遺伝子の一部変異)、遺伝子増幅(コピー数増加)、染色体転座(遺伝子の位置異常)です。完全欠失は機能喪失を意味し、がん抑制遺伝子の不活化メカニズムです。"
+  },
+  {
+    "question": "がん抑制遺伝子の役割として正しいものはどれですか?",
+    "options": [
+      "細胞増殖を促進する",
+      "細胞増殖を抑制し、DNA修復や細胞死を誘導する",
+      "がん遺伝子を活性化する",
+      "常に細胞を分裂させる"
+    ],
+    "answer": 1,
+    "explanation": "がん抑制遺伝子は細胞増殖のブレーキとして働き、細胞周期の進行を抑制したり、DNA損傷を修復したり、修復不能な場合には細胞死(アポトーシス)を誘導します。"
+  },
+  {
+    "question": "p53遺伝子について正しい記述はどれですか?",
+    "options": [
+      "がん遺伝子の代表例である",
+      "ゲノムの守護神と呼ばれる重要ながん抑制遺伝子である",
+      "人のがんではほとんど変異しない",
+      "DNA損傷時に細胞増殖を促進する"
+    ],
+    "answer": 1,
+    "explanation": "p53は「ゲノムの守護神」と呼ばれる最も重要ながん抑制遺伝子です。DNA損傷時に細胞周期を停止させ、修復を促し、修復不能なら細胞死を誘導します。人のがんの約50%で変異しています。"
+  },
+  {
+    "question": "多段階発がんについて正しい記述はどれですか?",
+    "options": [
+      "1つの遺伝子異常で即座にがんが発生する",
+      "複数の遺伝子異常が段階的に蓄積してがんが発生する",
+      "環境要因のみでがんが発生する",
+      "遺伝的要因は関係ない"
+    ],
+    "answer": 1,
+    "explanation": "がんは複数の遺伝子異常(がん遺伝子の活性化とがん抑制遺伝子の不活化)が段階的に蓄積することで、正常細胞から悪性がんへと変化します。この過程には通常数年から数十年かかります。"
+  },
+  {
+    "question": "大腸がんの多段階発がん過程で最初に変異する遺伝子はどれですか?",
+    "options": [
+      "p53遺伝子",
+      "APC遺伝子",
+      "K-RAS遺伝子",
+      "BRCA1遺伝子"
+    ],
+    "answer": 1,
+    "explanation": "家族性大腸ポリポーシスや散発性大腸がんの発生過程では、APC遺伝子の変異が最初のステップとして腺腫を形成します。その後K-RAS、p53などの変異が順次蓄積し、がんへと進展します。"
+  },
+  {
+    "question": "日本人男性におけるがんの最大の発生要因はどれですか?",
+    "options": [
+      "飲酒",
+      "喫煙",
+      "運動不足",
+      "ストレス"
+    ],
+    "answer": 1,
+    "explanation": "日本人男性において、喫煙はがんの最大の発生要因で、約30%近くを占めます。タバコの煙には約70種類の発がん性物質が含まれ、肺がんだけでなく多くのがんのリスクを上昇させます。"
+  },
+  {
+    "question": "慢性感染に起因するがんの組み合わせとして正しくないものはどれですか?",
+    "options": [
+      "B型肝炎ウイルス - 肝細胞がん",
+      "ヘリコバクター・ピロリ菌 - 胃がん",
+      "ヒトパピローマウイルス(HPV) - 子宮頸がん",
+      "インフルエンザウイルス - 肺がん"
+    ],
+    "answer": 3,
+    "explanation": "B型・C型肝炎ウイルスは肝細胞がん、ピロリ菌は胃がん、HPVは子宮頸がんの原因となります。インフルエンザウイルスは急性感染症の原因ですが、がんとの関連は確立されていません。"
+  },
+  {
+    "question": "悪性腫瘍の遠隔転移の経路として正しくないものはどれですか?",
+    "options": [
+      "リンパ行性転移",
+      "血行性転移",
+      "播種性転移",
+      "神経性転移"
+    ],
+    "answer": 3,
+    "explanation": "悪性腫瘍の遠隔転移の経路は、①リンパ行性転移(リンパ管経由)、②血行性転移(血管経由)、③播種性転移(体腔内散布)の3つです。神経性転移という経路は一般的には認められていません。"
+  },
+  {
+    "question": "上皮内がんについて正しい記述はどれですか?",
+    "options": [
+      "既に遠隔転移がある状態",
+      "基底膜を破って浸潤している状態",
+      "がん細胞が上皮内にとどまり基底膜を破っていない状態",
+      "治療不可能な進行がん"
+    ],
+    "answer": 2,
+    "explanation": "上皮内がんは、がん細胞が上皮内にとどまり基底膜を破っていない状態です。理論的には転移の可能性がなく、完全切除できればほぼ100%治癒します。早期がんとほぼ同義です。"
+  },
+  {
+    "question": "胃がんの深達度分類で早期がんに含まれるのはどれですか?",
+    "options": [
+      "漿膜まで浸潤したがん",
+      "粘膜下層までの浸潤にとどまるがん",
+      "固有筋層に浸潤したがん",
+      "他臓器に浸潤したがん"
+    ],
+    "answer": 1,
+    "explanation": "胃がんでは、浸潤が粘膜下層までにとどまるもの(T1a, T1b)を早期がんと定義します。固有筋層以深に浸潤すると進行がんとなります。深達度が深いほど転移リスクと予後不良のリスクが高まります。"
+  },
+  {
+    "question": "消化管がんが血行性転移を起こす場合、最初に転移しやすい臓器はどれですか?",
+    "options": [
+      "脳",
+      "肺",
+      "肝臓",
+      "骨"
+    ],
+    "answer": 2,
+    "explanation": "消化管がんは門脈を経由するため、まず肝臓に血行性転移しやすいです。肝臓を通過した血液は心臓を経て肺に至るため、次に肺転移が起こります。脳や骨への転移はさらに後の段階です。"
+  }
+];
+
+    // —— ユーティリティ —— 
+    const $ = (id) => document.getElementById(id);
+    function shuffle(array){
+      for(let i=array.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [array[i],array[j]] = [array[j],array[i]];
+      }
+      return array;
+    }
+
+    // —— 紙吹雪エフェクト —— 
+    function createConfetti(){
+      const colors = ['#ff1493','#00bfff','#ffd700','#ff6347','#98fb98','#dda0dd'];
+      for(let i=0;i<50;i++){
+        setTimeout(()=>{
+          const confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          confetti.style.left = Math.random()*100 + '%';
+          confetti.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+          confetti.style.animationDuration = (Math.random()*2 + 2) + 's';
+          confetti.style.animationDelay = Math.random()*0.5 + 's';
+          document.body.appendChild(confetti);
+          setTimeout(()=> confetti.remove(), 4000);
+        }, i*50);
+      }
+    }
+
+    // —— かわいい髑髏SVGを生成 —— 
+    function createSkullSVG(){
+      return `
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <!-- 頭蓋骨本体 -->
+          <ellipse cx="100" cy="90" rx="70" ry="75" fill="#f0f0f0" stroke="#333" stroke-width="3"/>
+          
+          <!-- 左目 -->
+          <ellipse cx="75" cy="80" rx="18" ry="22" fill="#333"/>
+          <ellipse cx="78" cy="75" rx="8" ry="10" fill="#fff" opacity="0.6"/>
+          <circle cx="80" cy="78" r="3" fill="#fff"/>
+          
+          <!-- 右目 -->
+          <ellipse cx="125" cy="80" rx="18" ry="22" fill="#333"/>
+          <ellipse cx="128" cy="75" rx="8" ry="10" fill="#fff" opacity="0.6"/>
+          <circle cx="130" cy="78" r="3" fill="#fff"/>
+          
+          <!-- 鼻 -->
+          <path d="M 95 100 L 100 110 L 105 100 Z" fill="#333"/>
+          
+          <!-- 笑顔の口 -->
+          <path d="M 70 125 Q 100 145 130 125" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
+          
+          <!-- 歯 -->
+          <rect x="75" y="123" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
+          <rect x="85" y="125" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
+          <rect x="95" y="127" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
+          <rect x="105" y="125" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
+          <rect x="115" y="123" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
+          
+          <!-- 頬の赤み -->
+          <ellipse cx="55" cy="100" rx="12" ry="10" fill="#ff69b4" opacity="0.5"/>
+          <ellipse cx="145" cy="100" rx="12" ry="10" fill="#ff69b4" opacity="0.5"/>
+          
+          <!-- 王冠 -->
+          <path d="M 50 50 L 55 35 L 60 50 L 75 30 L 90 50 L 100 25 L 110 50 L 125 30 L 140 50 L 145 35 L 150 50 Z" 
+                fill="#ffd700" stroke="#ff8c00" stroke-width="2"/>
+          
+          <!-- 王冠の宝石 -->
+          <circle cx="75" cy="40" r="4" fill="#ff1493"/>
+          <circle cx="100" cy="35" r="5" fill="#00bfff"/>
+          <circle cx="125" cy="40" r="4" fill="#ff1493"/>
+          
+          <!-- キラキラ効果 -->
+          <g opacity="0.8">
+            <path d="M 165 60 l 3 -8 l 3 8 l 8 3 l -8 3 l -3 8 l -3 -8 l -8 -3 z" fill="#ffd700">
+              <animateTransform attributeName="transform" type="rotate" 
+                from="0 168 63" to="360 168 63" dur="4s" repeatCount="indefinite"/>
+            </path>
+            <path d="M 35 70 l 2 -6 l 2 6 l 6 2 l -6 2 l -2 6 l -2 -6 l -6 -2 z" fill="#ffd700">
+              <animateTransform attributeName="transform" type="rotate" 
+                from="0 37 72" to="360 37 72" dur="3s" repeatCount="indefinite"/>
+            </path>
+          </g>
+          
+          <!-- ハート -->
+          <path d="M 100 170 C 80 150, 50 150, 50 130 C 50 110, 70 100, 100 120 C 130 100, 150 110, 150 130 C 150 150, 120 150, 100 170 Z" 
+                fill="#ff1493" stroke="#c71585" stroke-width="2" opacity="0.8">
+            <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
+          </path>
+        </svg>
+      `;
+    }
+
+    // —— 状態 —— 
+    let current = 0, score = 0, userAnswers = [];
+    let order = [];        // 全設問の並び
+    let optionOrder = [];  // 各設問ごとの選択肢インデックス並び
+    let timer = null, seconds = 0;
+    let isRetryMode = false; // 間違い直しモードフラグ
+    let wrongQuestions = []; // 間違えた問題のインデックスリスト
+    let retryHistory = {}; // 各問題の復習履歴を保存
+
+    function startTimer(){
+      if(timer) clearInterval(timer);
+      seconds = 0; $('timer').textContent = '00:00';
+      timer = setInterval(()=>{
+        seconds++;
+        const m = String(Math.floor(seconds/60)).padStart(2,'0');
+        const s = String(seconds%60).padStart(2,'0');
+        $('timer').textContent = `${m}:${s}`;
+      },1000);
+    }
+
+    function initQuiz(retryMode = false, retryQuestions = []){
+      isRetryMode = retryMode;
+      
+      if(isRetryMode){
+        // 間違い直しモード
+        order = shuffle([...retryQuestions]);
+        $('mode-indicator').innerHTML = '<div class="mode-badge">🔄 間違い直しモード</div>';
+      } else {
+        // 通常モード
+        order = shuffle([...Array(quizData.length).keys()]);
+        $('mode-indicator').innerHTML = '';
+        retryHistory = {}; // 履歴リセット
+      }
+      
+      // 各設問の選択肢インデックスをシャッフル
+      optionOrder = order.map(qi => shuffle([0,1,2,3]));
+      userAnswers = Array(quizData.length).fill(null);
+      current = 0; score = 0;
+      startTimer();
+      renderQuestion();
+    }
+
+    function renderQuestion(){
+      const qIndex = order[current];
+      const q = quizData[qIndex];
+
+      // 進捗
+      const prog = ((current+1)/order.length)*100;
+      $('progress-bar').style.width = `${prog}%`;
+      $('progress-text').textContent = `${current+1} / ${order.length} 問`;
+
+      // 本文
+      $('question').textContent = q.question;
+
+      // 選択肢（indexで安全にハンドリング）
+      const idxOrder = optionOrder[current];
+      $('options').innerHTML = idxOrder.map((optIdx,i)=>(
+        `<button class="option" data-opt="${optIdx}" onclick="selectOption(${optIdx}, this)">${q.options[optIdx]}</button>`
+      )).join('');
+
+      // 解説リセット
+      const exp = $('explanation');
+      exp.style.display='none'; exp.style.opacity='0'; exp.innerHTML='';
+      $('next').disabled = true;
+    }
+
+    window.selectOption = function(originalOptionIndex, el){
+      // 全て無効化
+      document.querySelectorAll('.option').forEach(o=>o.classList.add('disabled'));
+      el.classList.add('selected');
+
+      const qIndex = order[current];
+      const q = quizData[qIndex];
+      const isCorrect = (originalOptionIndex === q.answer);
+      userAnswers[qIndex] = originalOptionIndex;
+      
+      // 復習履歴を記録
+      if(isRetryMode){
+        if(!retryHistory[qIndex]) retryHistory[qIndex] = [];
+        retryHistory[qIndex].push(isCorrect);
+      }
+      
+      if(isCorrect){ el.classList.add('correct'); score++; }
+      else{
+        el.classList.add('incorrect');
+        // 正解に色
+        document.querySelectorAll('.option').forEach(o=>{
+          const idx = Number(o.getAttribute('data-opt'));
+          if(idx === q.answer){ o.classList.add('correct'); }
+        });
+      }
+
+      const exp = $('explanation');
+      exp.innerHTML = `
+        <div class="explanation-header" style="color:${isCorrect ? '#4caf50' : '#f44336'};">
+          <span class="explanation-icon">💡</span>解説
+        </div>
+        ${q.explanation}
+      `;
+      exp.style.borderLeftColor = isCorrect ? '#4caf50' : '#f44336';
+      exp.style.display='block';
+      requestAnimationFrame(()=> exp.style.opacity='1');
+
+      $('next').disabled = false;
+    };
+
+    $('next').addEventListener('click', ()=>{
+      if(current < order.length-1){ current++; renderQuestion(); }
+      else{ showResult(); }
+    });
+
+    function showResult(){
+      clearInterval(timer);
+      const finalTime = $('timer').textContent;
+      $('quiz-container').style.display = 'none';
+
+      const total = order.length;
+      const pct = (score/total)*100;
+      let color = '#34c759', msg = '素晴らしい成績です！この調子で学習を続けましょう。';
+      if(pct < 40){ color = '#ff3b30'; msg = 'お疲れ様でした！間違えた問題を中心にしっかり復習しましょう。'; }
+      else if(pct < 80){ color = '#ff9500'; msg = 'あと一歩！間違えた箇所を復習すれば、さらに実力がアップします。'; }
+      
+      let skullHTML = '';
+      if(pct === 100){ 
+        msg = '完璧です！素晴らしい集中力と知識です。おめでとうございます！';
+        createConfetti(); // 紙吹雪エフェクト
+        skullHTML = `
+          <div id="skull-celebration">
+            ${createSkullSVG()}
+            <div class="celebration-text">🎉 パーフェクト！ 🎉</div>
+          </div>
+        `;
+      }
+
+      // 成績サマリー
+      const modeText = isRetryMode ? ' (間違い直しモード)' : '';
+      const summary = `
+        <div class="result-card" id="summary-card">
+          ${skullHTML}
+          <div class="summary-grid">
+            <div class="score-display">
+              <div class="score-circle" style="--p:${pct.toFixed(1)}; --c:${color};">
+                <span class="score-percentage">${Math.round(pct)}<small>%</small></span>
+              </div>
+            </div>
+            <div class="stats-details">
+              <div class="stat-item"><span class="stat-icon">✅</span><span class="stat-label">正解数</span><span class="stat-value">${score} / ${total}${modeText}</span></div>
+              <div class="stat-item"><span class="stat-icon">⏱️</span><span class="stat-label">所要時間</span><span class="stat-value">${finalTime}</span></div>
+            </div>
+          </div>
+          <p class="feedback-message" style="color:${color};">${msg}</p>
+        </div>
+      `;
+
+      // 間違い一覧
+      wrongQuestions = [];
+      order.forEach((qIndex)=>{
+        if(userAnswers[qIndex] === null) return;
+        if(userAnswers[qIndex] !== quizData[qIndex].answer){
+          wrongQuestions.push(qIndex);
+        }
+      });
+
+      let html = `<h2>クイズ結果</h2>${summary}`;
+      
+      // 間違い直しボタン
+      if(wrongQuestions.length > 0){
+        html += `
+          <div id="incorrect-summary">
+            <h3>要復習の問題（${wrongQuestions.length}問）</h3>
+            ${wrongQuestions.map(qi=>`<a href="#result-q-${qi+1}">問${qi+1}</a>`).join('')}
+            <button class="nav-button retry-wrong" onclick="retryWrongQuestions()">❌ 間違えた問題だけやり直す</button>
+          </div>
+        `;
+      }
+
+      // 各問のレビュー
+      order.forEach((qIndex)=>{
+        const q = quizData[qIndex];
+        const ua = userAnswers[qIndex];
+        const ok = (ua === q.answer);
+        
+        // 復習履歴表示
+        let historyHTML = '';
+        if(retryHistory[qIndex] && retryHistory[qIndex].length > 0){
+          const historyIcons = retryHistory[qIndex].map(correct => 
+            correct ? '✅' : '❌'
+          ).join(' ');
+          historyHTML = `<p><strong>復習履歴:</strong> ${historyIcons}</p>`;
+        }
+        
+        html += `
+          <div class="result-card" id="result-q-${qIndex+1}">
+            <h3>問題 ${qIndex+1}</h3>
+            <p class="result-status ${ok ? 'correct':'incorrect'}">${ok ? '✅ 正解':'❌ 不正解'}</p>
+            ${historyHTML}
+            <p><strong>質問:</strong> ${q.question}</p>
+            <p><strong>あなたの回答:</strong> ${ua !== null ? q.options[ua] : '未回答'}</p>
+            <p><strong>正解:</strong> ${q.options[q.answer]}</p>
+            <p><strong>説明:</strong> ${q.explanation}</p>
+          </div>
+        `;
+      });
+
+      html += `<button class="nav-button" onclick="restartQuiz()">🔄 全問題をもう一度挑戦する</button>`;
+      $('result-container').innerHTML = html;
+
+      if(pct === 100 && !isRetryMode){
+        const a = $('attendance-link');
+        a.style.display = 'block';
+        a.innerHTML = `<p>おめでとうございます！全問正解です。</p>
+          <a href="https://forms.gle/ayBPd47Fr5orMXPP8" target="_blank" rel="noopener">出席確認フォームに回答する</a>`;
+      }
+    }
+
+    window.restartQuiz = function(){
+      $('quiz-container').style.display = 'block';
+      $('result-container').innerHTML = '';
+      $('attendance-link').style.display = 'none';
+      initQuiz(false);
+    };
+
+    window.retryWrongQuestions = function(){
+      if(wrongQuestions.length === 0){
+        alert('間違えた問題がありません！');
+        return;
+      }
+      $('quiz-container').style.display = 'block';
+      $('result-container').innerHTML = '';
+      $('attendance-link').style.display = 'none';
+      initQuiz(true, wrongQuestions);
+    };
+
+    // 起動
+    initQuiz();
+  </script>
+</body>
+</html>
