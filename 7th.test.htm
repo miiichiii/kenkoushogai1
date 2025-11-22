@@ -12,9 +12,19 @@
       background:linear-gradient(135deg,#a8edea,#fed6e3);
       background-size:cover;background-repeat:no-repeat;background-attachment:fixed;
       padding:20px;margin:0;
+      transition:background .3s ease,color .3s ease;
     }
     .container{max-width:800px;margin:0 auto;}
     h1,h2{font-family:'Noto Sans JP',sans-serif;font-weight:700;text-align:center;}
+    .toolbar{display:flex;justify-content:flex-end;margin-bottom:12px;gap:10px;}
+    .theme-toggle{
+      background:linear-gradient(135deg,#111827,#1f2937);
+      color:#f9fafb;border:1px solid rgba(255,255,255,0.12);
+      border-radius:999px;padding:8px 14px;font-size:.95em;
+      cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.25);
+      transition:transform .2s ease,box-shadow .2s ease,background .3s ease;
+    }
+    .theme-toggle:hover{transform:translateY(-1px);box-shadow:0 8px 16px rgba(0,0,0,0.3);}
     .quiz-container,.result-card{
       background-color:rgba(255,255,255,0.2);
       backdrop-filter:blur(10px);
@@ -168,10 +178,35 @@
         opacity:0;
       }
     }
+
+    /* ---- ダークテーマ ---- */
+    .dark-theme{
+      color:#e5e7eb;
+      background:radial-gradient(ellipse at top,#1f2937 0%,#0b1220 55%,#050912 100%);
+    }
+    .dark-theme h1,.dark-theme h2{color:#f3f4f6;}
+    .dark-theme .quiz-container,
+    .dark-theme .result-card,
+    .dark-theme #summary-card{background-color:rgba(17,24,39,0.55);border-color:rgba(255,255,255,0.08);box-shadow:0 10px 30px rgba(0,0,0,0.45);}
+    .dark-theme #progress-container{background-color:rgba(255,255,255,0.08);}
+    .dark-theme #progress-info{color:#e5e7eb;}
+    .dark-theme .question{color:#f3f4f6;}
+    .dark-theme .option{background-color:rgba(255,255,255,0.08);color:#e5e7eb;box-shadow:0 6px 14px rgba(0,0,0,0.25);}
+    .dark-theme .option:hover{background-color:rgba(255,255,255,0.16);}
+    .dark-theme .explanation{background-color:rgba(255,255,255,0.08);color:#e5e7eb;}
+    .dark-theme .nav-button{background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 8px 18px rgba(0,0,0,0.35);}
+    .dark-theme .nav-button:disabled{background:linear-gradient(135deg,#4b5563,#6b7280);}
+    .dark-theme #incorrect-summary{background-color:rgba(255,82,82,0.08);border-color:#ff6b6b;}
+    .dark-theme #incorrect-summary a{background-color:#ef4444;}
+    .dark-theme #attendance-link{background-color:#22c55e;}
+    .dark-theme .theme-toggle{background:linear-gradient(135deg,#fcd34d,#f59e0b);color:#111827;border-color:rgba(0,0,0,0.2);}
   </style>
 </head>
 <body>
   <div class="container">
+    <div class="toolbar">
+      <button id="theme-toggle" class="theme-toggle">🌙 ダークモード</button>
+    </div>
     <h1>第７回確認テスト（健康障害1：腫瘍）</h1>
 
     <div id="quiz-container" class="quiz-container">
@@ -429,6 +464,27 @@
       return array;
     }
 
+    // —— テーマ切り替え —— 
+    const themeToggle = $('theme-toggle');
+    function applyTheme(mode){
+      const isDark = (mode === 'dark');
+      document.body.classList.toggle('dark-theme', isDark);
+      if(themeToggle){
+        themeToggle.textContent = isDark ? '☀️ ライトモード' : '🌙 ダークモード';
+      }
+      localStorage.setItem('quiz-theme', isDark ? 'dark' : 'light');
+    }
+    function initTheme(){
+      const saved = localStorage.getItem('quiz-theme');
+      applyTheme(saved === 'dark' ? 'dark' : 'light');
+      if(themeToggle){
+        themeToggle.addEventListener('click', ()=>{
+          const next = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
+          applyTheme(next);
+        });
+      }
+    }
+
     // —— 紙吹雪エフェクト —— 
     function createConfetti(){
       const colors = ['#ff1493','#00bfff','#ffd700','#ff6347','#98fb98','#dda0dd'];
@@ -446,66 +502,55 @@
       }
     }
 
-    // —— かわいい髑髏SVGを生成 —— 
+    // —— ピカチュウ風キャラSVGを生成 —— 
     function createSkullSVG(){
       return `
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <!-- 頭蓋骨本体 -->
-          <ellipse cx="100" cy="90" rx="70" ry="75" fill="#f0f0f0" stroke="#333" stroke-width="3"/>
-          
-          <!-- 左目 -->
-          <ellipse cx="75" cy="80" rx="18" ry="22" fill="#333"/>
-          <ellipse cx="78" cy="75" rx="8" ry="10" fill="#fff" opacity="0.6"/>
-          <circle cx="80" cy="78" r="3" fill="#fff"/>
-          
-          <!-- 右目 -->
-          <ellipse cx="125" cy="80" rx="18" ry="22" fill="#333"/>
-          <ellipse cx="128" cy="75" rx="8" ry="10" fill="#fff" opacity="0.6"/>
-          <circle cx="130" cy="78" r="3" fill="#fff"/>
-          
-          <!-- 鼻 -->
-          <path d="M 95 100 L 100 110 L 105 100 Z" fill="#333"/>
-          
-          <!-- 笑顔の口 -->
-          <path d="M 70 125 Q 100 145 130 125" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
-          
-          <!-- 歯 -->
-          <rect x="75" y="123" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
-          <rect x="85" y="125" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
-          <rect x="95" y="127" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
-          <rect x="105" y="125" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
-          <rect x="115" y="123" width="8" height="12" fill="#fff" stroke="#333" stroke-width="1"/>
-          
-          <!-- 頬の赤み -->
-          <ellipse cx="55" cy="100" rx="12" ry="10" fill="#ff69b4" opacity="0.5"/>
-          <ellipse cx="145" cy="100" rx="12" ry="10" fill="#ff69b4" opacity="0.5"/>
-          
-          <!-- 王冠 -->
-          <path d="M 50 50 L 55 35 L 60 50 L 75 30 L 90 50 L 100 25 L 110 50 L 125 30 L 140 50 L 145 35 L 150 50 Z" 
-                fill="#ffd700" stroke="#ff8c00" stroke-width="2"/>
-          
-          <!-- 王冠の宝石 -->
-          <circle cx="75" cy="40" r="4" fill="#ff1493"/>
-          <circle cx="100" cy="35" r="5" fill="#00bfff"/>
-          <circle cx="125" cy="40" r="4" fill="#ff1493"/>
-          
-          <!-- キラキラ効果 -->
-          <g opacity="0.8">
-            <path d="M 165 60 l 3 -8 l 3 8 l 8 3 l -8 3 l -3 8 l -3 -8 l -8 -3 z" fill="#ffd700">
-              <animateTransform attributeName="transform" type="rotate" 
-                from="0 168 63" to="360 168 63" dur="4s" repeatCount="indefinite"/>
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <!-- 体 -->
+          <defs>
+            <linearGradient id="pika-body" x1="0%" x2="0%" y1="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffe066"/>
+              <stop offset="100%" stop-color="#ffcc33"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="110" cy="125" rx="70" ry="75" fill="url(#pika-body)" stroke="#e2a100" stroke-width="3"/>
+
+          <!-- 耳 -->
+          <path d="M70 48 C60 10, 30 10, 30 45 C35 65,55 75,70 70 Z" fill="#ffe066" stroke="#e2a100" stroke-width="3"/>
+          <path d="M70 20 L55 35 L70 55 Z" fill="#1c1c1c"/>
+          <path d="M150 48 C160 10, 190 10, 190 45 C185 65,165 75,150 70 Z" fill="#ffe066" stroke="#e2a100" stroke-width="3"/>
+          <path d="M150 20 L165 35 L150 55 Z" fill="#1c1c1c"/>
+
+          <!-- 尻尾 -->
+          <path d="M170 130 L210 130 L185 150 L205 150 L165 185 L170 155 L150 155 Z" fill="#ffcc33" stroke="#cc9800" stroke-width="4" stroke-linejoin="round"/>
+
+          <!-- 腕・足 -->
+          <ellipse cx="60" cy="140" rx="22" ry="16" fill="#ffd54f" stroke="#e2a100" stroke-width="3"/>
+          <ellipse cx="160" cy="140" rx="22" ry="16" fill="#ffd54f" stroke="#e2a100" stroke-width="3"/>
+          <ellipse cx="85" cy="190" rx="22" ry="14" fill="#ffcc33" stroke="#e2a100" stroke-width="3"/>
+          <ellipse cx="135" cy="190" rx="22" ry="14" fill="#ffcc33" stroke="#e2a100" stroke-width="3"/>
+
+          <!-- 顔 -->
+          <ellipse cx="90" cy="110" rx="12" ry="14" fill="#1c1c1c"/>
+          <ellipse cx="130" cy="110" rx="12" ry="14" fill="#1c1c1c"/>
+          <circle cx="95" cy="105" r="4" fill="#fff" opacity="0.7"/>
+          <circle cx="135" cy="105" r="4" fill="#fff" opacity="0.7"/>
+          <path d="M108 118 L112 118 L110 125 Z" fill="#1c1c1c"/>
+          <path d="M90 140 Q110 150 130 140" fill="none" stroke="#1c1c1c" stroke-width="4" stroke-linecap="round"/>
+
+          <!-- ほっぺ -->
+          <ellipse cx="70" cy="130" rx="14" ry="12" fill="#ff6b6b" opacity="0.85"/>
+          <ellipse cx="150" cy="130" rx="14" ry="12" fill="#ff6b6b" opacity="0.85"/>
+
+          <!-- 稲妻エフェクト -->
+          <g opacity="0.6">
+            <path d="M40 70 L65 65 L55 90 L75 85 L45 120 L55 95 L35 100 Z" fill="#ffd700" stroke="#ffae00" stroke-width="2">
+              <animateTransform attributeName="transform" type="rotate" from="0 55 90" to="-8 55 90" dur="1.2s" repeatCount="indefinite" />
             </path>
-            <path d="M 35 70 l 2 -6 l 2 6 l 6 2 l -6 2 l -2 6 l -2 -6 l -6 -2 z" fill="#ffd700">
-              <animateTransform attributeName="transform" type="rotate" 
-                from="0 37 72" to="360 37 72" dur="3s" repeatCount="indefinite"/>
+            <path d="M180 70 L155 65 L165 90 L145 85 L175 120 L165 95 L185 100 Z" fill="#ffd700" stroke="#ffae00" stroke-width="2">
+              <animateTransform attributeName="transform" type="rotate" from="0 165 90" to="8 165 90" dur="1.2s" repeatCount="indefinite" />
             </path>
           </g>
-          
-          <!-- ハート -->
-          <path d="M 100 170 C 80 150, 50 150, 50 130 C 50 110, 70 100, 100 120 C 130 100, 150 110, 150 130 C 150 150, 120 150, 100 170 Z" 
-                fill="#ff1493" stroke="#c71585" stroke-width="2" opacity="0.8">
-            <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
-          </path>
         </svg>
       `;
     }
@@ -744,6 +789,7 @@
     };
 
     // 起動
+    initTheme();
     initQuiz();
   </script>
 </body>
