@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>健康障害の成り立ち 総合クイズアプリ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient-light: linear-gradient(135deg, #a8edea, #fed6e3);
+      --bg-gradient-dark: radial-gradient(ellipse at top, #1f2937 0%, #0b1220 55%, #050912 100%);
+      --card-bg-light: rgba(255, 255, 255, 0.7);
+      --card-bg-dark: rgba(17, 24, 39, 0.6);
+      --text-light: #333;
+      --text-dark: #e5e7eb;
+      --accent: #007aff;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans JP', sans-serif;
+      line-height: 1.6;
+      color: var(--text-light);
+      background: var(--bg-gradient-light);
+      background-size: cover;
+      background-attachment: fixed;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body.dark-theme {
+      color: var(--text-dark);
+      background: var(--bg-gradient-dark);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* 共通コンポーネント */
+    .card {
+      background-color: var(--card-bg-light);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      animation: fadeIn 0.5s ease;
+    }
+
+    body.dark-theme .card {
+      background-color: var(--card-bg-dark);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-weight: 700;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      outline: none;
+      font-family: inherit;
+    }
+
+    /* ツールバー */
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 15px;
+    }
+
+    .theme-toggle {
+      background: rgba(0, 0, 0, 0.1);
+      color: inherit;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      transition: 0.3s;
+    }
+    .theme-toggle:hover { background: rgba(0, 0, 0, 0.2); }
+    body.dark-theme .theme-toggle { background: rgba(255, 255, 255, 0.1); }
+
+    /* スタート画面 */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .menu-btn {
+      padding: 20px;
+      border-radius: 12px;
+      background: white;
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #333;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    body.dark-theme .menu-btn {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    .menu-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 12px rgba(0,0,0,0.1);
+    }
+
+    .menu-btn.primary {
+      background: linear-gradient(135deg, #007aff, #00c6ff);
+      color: white;
+      grid-column: 1 / -1;
+      text-align: center;
+      justify-content: center;
+      font-size: 1.3em;
+      padding: 30px;
+    }
+
+    .badge {
+      background: rgba(0,0,0,0.1);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.8em;
+    }
+
+    /* クイズ画面 */
+    .progress-area {
+      margin-bottom: 20px;
+    }
+    .progress-bar-bg {
+      background: rgba(0,0,0,0.1);
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      background: #007aff;
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9em;
+      margin-top: 5px;
+      font-weight: bold;
+    }
+
+    .question-text {
+      font-size: 1.3em;
+      margin-bottom: 25px;
+    }
+
+    .options-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .option-btn {
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.8);
+      text-align: left;
+      font-size: 1em;
+      transition: 0.2s;
+      border: 2px solid transparent;
+    }
+    body.dark-theme .option-btn { background: rgba(255,255,255,0.1); color: white; }
+
+    .option-btn:hover:not(:disabled) {
+      background: white;
+      transform: scale(1.01);
+    }
+    body.dark-theme .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
+
+    .option-btn.correct {
+      background: #d1fae5;
+      border-color: #34c759;
+      color: #065f46;
+    }
+    .option-btn.incorrect {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #991b1b;
+    }
+
+    .explanation {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 10px;
+      border-left: 5px solid #007aff;
+      display: none;
+      animation: slideDown 0.3s ease;
+    }
+    body.dark-theme .explanation { background: rgba(0,0,0,0.3); }
+
+    .nav-btn {
+      width: 100%;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 10px;
+      background: #007aff;
+      color: white;
+      font-weight: bold;
+      font-size: 1.1em;
+      display: none;
+    }
+    .nav-btn:hover { background: #0056b3; }
+
+    /* 結果画面 */
+    .result-score {
+      text-align: center;
+      font-size: 3em;
+      font-weight: bold;
+      color: #007aff;
+      margin: 20px 0;
+    }
+    .result-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .action-btn {
+      flex: 1;
+      padding: 15px;
+      border-radius: 10px;
+      font-weight: bold;
+      background: #6b7280;
+      color: white;
+    }
+    .action-btn.primary { background: #007aff; }
+    .action-btn:hover { opacity: 0.9; }
+
+    /* アニメーション */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="toolbar">
+    <button class="theme-toggle" onclick="toggleTheme()">🌙 ダークモード切替</button>
+  </div>
+
+  <!-- スタート画面 -->
+  <div id="start-screen" class="card">
+    <h1>健康障害の成り立ち<br>総合演習アプリ</h1>
+    <p style="text-align:center; opacity:0.8;">全7回・計140問以上から出題されます</p>
+    
+    <div class="menu-grid">
+      <button class="menu-btn primary" onclick="startQuiz('all')">
+        <span>🔥 全問からランダム出題</span>
+      </button>
+      
+      <button class="menu-btn" onclick="startQuiz('1st')">
+        <span>第1回：組織・細胞障害</span>
+        <span class="badge">20問</span>
+      </button>
+      <button class="menu-btn" onclick="startQuiz('2nd')">
+        <span>第2回：免疫・アレルギー</span>
+        <span class="badge">20問</span>
+      </button>
+      <button class="menu-btn" onclick="startQuiz('3rd')">
+        <span>第3回：炎症と修復</span>
+        <span class="badge">20問</span>
+      </button>
+      <button class="menu-btn" onclick="startQuiz('4th')">
+        <span>第4回：糖尿病・自己免疫</span>
+        <span class="badge">20問</span>
+      </button>
+      <button class="menu-btn" onclick="startQuiz('5th')">
+        <span>第5回：循環障害 (1)</span>
+        <span class="badge">20問</span>
+      </button>
+      <button class="menu-btn" onclick="startQuiz('6th')">
+        <span>第6回：循環障害 (2)</span>
+        <span class="badge">20問</span>
+      </button>
+      <button class="menu-btn" onclick="startQuiz('7th')">
+        <span>第7回：腫瘍・がん</span>
+        <span class="badge">20問</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- クイズ画面 -->
+  <div id="quiz-screen" class="card hidden">
+    <div class="progress-area">
+      <div class="progress-bar-bg">
+        <div id="progress-bar" class="progress-bar-fill"></div>
+      </div>
+      <div class="progress-text">
+        <span id="question-count">Q. 1 / 10</span>
+        <span id="mode-label">モード</span>
+      </div>
+    </div>
+
+    <div id="question-text" class="question-text"></div>
+    <div id="options-grid" class="options-grid"></div>
+
+    <div id="explanation" class="explanation">
+      <strong>💡 解説</strong>
+      <p id="explanation-text"></p>
+    </div>
+
+    <button id="next-btn" class="nav-btn" onclick="nextQuestion()">次の問題へ</button>
+  </div>
+
+  <!-- 結果画面 -->
+  <div id="result-screen" class="card hidden">
+    <h2>結果発表！</h2>
+    <div class="result-score">
+      <span id="score-num">0</span> <span style="font-size:0.5em; color:var(--text-light)">/</span> <span id="total-num" style="font-size:0.5em; color:var(--text-light)">0</span>
+    </div>
+    <p id="result-msg" style="text-align:center; font-weight:bold;"></p>
+    
+    <div id="wrong-list" style="margin-top:20px; display:none;">
+      <h3 style="border-bottom:1px solid #ddd; padding-bottom:10px;">要復習リスト</h3>
+      <ul id="wrong-items" style="text-align:left; font-size:0.9em; padding-left:20px;"></ul>
+    </div>
+
+    <div class="result-actions">
+      <button class="action-btn" onclick="showStartScreen()">🏠 メニューに戻る</button>
+      <button class="action-btn primary" onclick="retryQuiz()">🔄 もう一度やる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==========================================
+// データ定義 (All Quiz Data)
+// ==========================================
+const ALL_QUIZZES = {
+  "1st": [
+    { "question": "組織学的な研究手法において、細胞の変性や分解を防ぎ、細胞構造を安定化させるためにホルマリンを使用する工程を何と呼ぶか？", "options": ["薄切", "染色", "固定", "包埋"], "answer": 2, "explanation": "ホルマリンはタンパク質に反応し、細胞構造を安定化させ、細胞の変性や分解を防ぎます。このステップは「固定」と呼ばれます。" },
+    { "question": "病理学で最も基本的かつ標準的な染色法で、酸性成分（核など）を青紫に、塩基性成分（細胞質など）をピンクに染め分ける方法はどれか？", "options": ["ベルリン青染色", "ヘマトキシリンとエオシン染色", "PAS染色", "コンゴーレッド染色"], "answer": 1, "explanation": "ヘマトキシリンとエオシン染色（HE染色）は、ヘマトキシリンが酸性成分（DNA/RNA）を青紫に、エオジンが塩基性成分（細胞質/コラーゲン）をピンクに染め分けます。" },
+    { "question": "細胞障害の段階のうち、ダメージの原因を取り除けば細胞が回復できる段階を指す言葉はどれか？", "options": ["適応", "不可逆性障害", "可逆性障害", "細胞死"], "answer": 2, "explanation": "可逆性障害は、ダメージがあるものの、原因を除去すれば回復可能な段階です。これには細胞の腫脹や脂肪変性などが含まれます。" },
+    { "question": "使用しない筋肉が細くなることや、ギプス固定した骨格筋が萎縮する現象を指す、「適応」の一形態はどれか？", "options": ["圧迫萎縮", "ホルモン性萎縮", "神経性萎縮", "廃用萎縮"], "answer": 3, "explanation": "廃用萎縮は使わないことによる萎縮であり、ギプス固定した筋肉が細くなるのが典型です。再び使えば元に戻ることが多い可逆性の萎縮です。" },
+    { "question": "肝臓や腎臓の実質細胞でよく見られる、細胞が水を含んで腫れ、細胞質が濁って見える最も基本的な可逆性障害はどれか？", "options": ["硝子滴変性", "脂肪変性", "混濁腫脹（空胞変性）", "角質変性"], "answer": 2, "explanation": "混濁腫脹（こんだくしゅちょう）は、細胞が水を含んで腫れ、細胞質が濁って見える最も基本的な可逆性障害です。さらに進むと空胞変性になります。" },
+    { "question": "粘液成分（ムチン）が細胞質に異常に蓄積し、核が端に押しやられて「印環（指輪）」のように見える、印環細胞型胃がんに特徴的な変性はどれか？", "options": ["硝子滴変性", "粘液変性", "グリコーゲン変性", "脂肪変性"], "answer": 1, "explanation": "粘液変性は、細胞内にムチンが過剰にたまり、核が端に押しやられることで印環細胞（signet-ring appearance）と呼ばれる形態を示す変化です。" },
+    { "question": "肝細胞などでアルコールや薬物の影響により、細胞内にタンパク質のかたまりができ、ガラスのように透き通って見える可逆的な変性はどれか？", "options": ["角質変性", "グリコーゲン変性", "硝子滴変性", "混濁腫脹"], "answer": 2, "explanation": "硝子滴変性は、細胞内にタンパク質のかたまりができる変化で、ガラスのように透き通って見える（硝子様）ためこう呼ばれます。" },
+    { "question": "頻回輸血や溶血性貧血などにより、肝細胞やクッパー細胞内に鉄（ヘモジデリン）が過剰に沈着した状態（ヘモジデローシス）を組織学的に確認するために、鉄を青く染め出す染色法はどれか？", "options": ["HE染色", "オイルレッドO染色", "ベルリン青染色", "コンゴーレッド染色"], "answer": 2, "explanation": "ヘモジデローシスとは、鉄が肝細胞やクッパー細胞内に過剰に沈着した状態を指します。この鉄の沈着は、ベルリン青染色（Prussian blue）によって青く染め出され、組織学的に確認されます。" },
+    { "question": "血管壁がフィブリンや免疫複合体などの血漿成分に置き換わり、腎臓の小動脈壁などがピンク色に膨化する、細胞外変性はどれか？", "options": ["アミロイド変性", "類線維素変性", "硝子変性", "粘液変性"], "answer": 1, "explanation": "類線維素変性は、血管壁がフィブリンや免疫複合体などの血漿成分に置き換わる変化であり、炎症や高血圧などでよく見られます。" },
+    { "question": "肝細胞内に中性脂肪が異常に蓄積した状態（脂肪肝）を組織学的に観察する際、HE染色では脂肪滴が溶けて空胞状に見えるため、脂肪そのものを赤橙色に染め出すために用いられる特殊な染色法はどれか？", "options": ["ベルリン青染色", "オイルレッドO染色", "HE染色", "コンゴーレッド染色"], "answer": 1, "explanation": "脂肪肝は肝細胞内に中性脂肪が異常に蓄積した状態（脂肪変性）です。脂肪そのものを染色するには、オイルレッドOなどの脂肪染色を使用し、赤橙色に染め出して確認します。" },
+    { "question": "慢性関節リウマチや結核などの慢性炎症や感染症に続発して起こり、AAタンパク質が沈着するアミロイドーシスのタイプはどれか？", "options": ["原発性アミロイドーシス", "続発性アミロイドーシス", "家族性アミロイドーシス", "透析アミロイドーシス"], "answer": 1, "explanation": "続発性アミロイドーシスは慢性炎症や感染症に続発して起こり、「アミロイド関連タンパク質（AAタンパク質）」が沈着します。" },
+    { "question": "壊死した組織の処理パターンのうち、心筋梗塞の後に見られるように、壊死した部分が新しい肉芽組織に置き換えられ、最終的に線維化して瘢痕（はんこん）になる反応はどれか？", "options": ["排出", "被包", "器質化", "融解"], "answer": 2, "explanation": "器質化とは、壊死した組織が肉芽組織で置き換えられ、やがて線維化して瘢痕になることです。心筋梗塞後の白い瘢痕がこのパターンです。" },
+    { "question": "虚血（血流障害）が原因で起こり、細胞が死んでもタンパク質が固まり、一時的に組織構造がそのまま残る、心筋梗塞や腎梗塞で典型的に見られる壊死のタイプはどれか？", "options": ["融解壊死", "乾酪壊死", "凝固壊死", "壊疽"], "answer": 2, "explanation": "凝固壊死は虚血により起こり、蛋白凝固によって組織構造が一時的に残るのが特徴です。" },
+    { "question": "主に脳梗塞や膿瘍で見られ、壊死組織が酵素で消化されてドロドロの液状になってしまう壊死のタイプはどれか？", "options": ["乾酪壊死", "融解壊死", "凝固壊死", "壊疽"], "answer": 1, "explanation": "融解壊死は酵素消化により組織が液状化するタイプであり、主に脳や膿瘍で見られます。" },
+    { "question": "結核に特徴的な壊死で、白くボソボソしたチーズ状の外観を示し、顕微鏡で見ると細胞の輪郭が完全に消失している壊死のタイプはどれか？", "options": ["乾酪壊死", "凝固壊死", "融解壊死", "壊疽"], "answer": 0, "explanation": "乾酪壊死は結核菌感染によるもので、チーズ状（乾酪状）を呈し、細胞構造が消失するのが特徴です。" },
+    { "question": "アポトーシスと壊死（ネクローシス）の最も大きな違いとして、壊死に特徴的で、アポトーシスでは起こらない反応はどれか？", "options": ["細胞の縮小", "核の断片化", "炎症反応の伴出", "マクロファージによる貪食"], "answer": 2, "explanation": "壊死は細胞膜が破れ内容物が漏れ出すため炎症を伴う破壊的な死である一方、アポトーシスは膜が保たれ、炎症を起こさない静かな細胞死です。" },
+    { "question": "プリン体代謝の異常により尿酸が増加し、特に足の親指の付け根の関節に強い炎症と激痛を引き起こす病態はどれか？", "options": ["尿毒症", "肝性脳症", "痛風", "フェニルケトン尿症"], "answer": 2, "explanation": "痛風はプリン体代謝の異常で尿酸が増え、尿酸結晶が関節に沈着して炎症を起こす病気です。" },
+    { "question": "血中カルシウム濃度が正常であるにもかかわらず、壊死組織や動脈硬化巣など、傷んだ組織にカルシウムが沈着する現象を何と呼ぶか？", "options": ["転移性石灰化", "異栄養性石灰化", "骨軟化症", "結石"], "answer": 1, "explanation": "異栄養性石灰化は、血中カルシウム濃度が正常であっても、壊死組織など傷んだ場所にカルシウムが沈着する現象です。" },
+    { "question": "赤血球が分解された後、肝細胞でグルクロン酸と結合し、水溶性となって毒性がなくなるビリルビンの形態はどれか？", "options": ["間接ビリルビン（非抱合型）", "ヘム", "直接ビリルビン（抱合型）", "ウロビリノーゲン"], "answer": 2, "explanation": "間接ビリルビンは脂溶性で毒性がありますが、肝臓でグルクロン酸と結合する抱合反応を経て、水溶性の直接ビリルビン（抱合型）となり毒性がなくなります。" }
+  ],
+  "2nd": [
+    { "question": "長期間にわたる高血圧の結果、心臓の壁が厚くなる現象を説明するのに最も適切な用語はどれですか？", "options": ["化生", "過形成", "肥大", "再生"], "answer": 2, "explanation": "高血圧という持続的な負荷に対し、心筋細胞一つひとつの容積が増大して対応するため、これは作業性肥大の典型例です。" },
+    { "question": "喫煙者の気管支粘膜において、本来の線毛上皮が重層扁平上皮に置き換わることがあります。この現象を何と呼びますか？", "options": ["化生", "過形成", "変性", "萎縮"], "answer": 0, "explanation": "持続的な刺激（喫煙）に対応するため、より丈夫な細胞タイプに変化する現象であり、化生の典型例です。" },
+    { "question": "免疫反応において、特定の抗原を記憶し、2回目以降の侵入に対して特異的かつ強力な反応を示す免疫はどれですか？", "options": ["自然免疫", "獲得免疫", "液性免疫", "細胞性免疫"], "answer": 1, "explanation": "一度侵入した異物を記憶し、次に備えるのは獲得免疫の特徴です。ワクチン接種はこの仕組みを利用しています。" },
+    { "question": "体内に侵入した細菌などを捕食（貪食）し、その情報をヘルパーT細胞に伝える「抗原提示」の役割を担う細胞はどれですか？", "options": ["好中球", "B細胞", "マクロファージ", "NK細胞"], "answer": 2, "explanation": "マクロファージは強力な貪食作用を持ち、食べた異物の断片を細胞表面に出してT細胞に伝える、抗原提示の代表的な細胞です。" },
+    { "question": "抗体を産生する形質細胞に分化し、液性免疫の中心的な役割を担うリンパ球はどれですか？", "options": ["ヘルパーT細胞", "キラーT細胞", "B細胞", "NK細胞"], "answer": 2, "explanation": "B細胞（Bリンパ球）は骨髄由来のリンパ球で、抗原の刺激を受けると抗体を大量に産生する「形質細胞」へと分化します。" },
+    { "question": "スギ花粉症などのアレルギー反応において、マスト細胞に結合してヒスタミンの放出を引き起こす主な抗体（免疫グロブリン）はどれですか？", "options": ["IgG", "IgA", "IgM", "IgE"], "answer": 3, "explanation": "IgEはマスト細胞や好塩基球の表面に結合します。アレルゲンが再侵入すると、マスト細胞からヒスタミンなどが放出され、即時型アレルギーが発症します。" },
+    { "question": "抗体の機能の一つである「オプソニン作用」について、最も適切な説明はどれですか？", "options": ["ウイルスに結合して無力化する作用", "細菌の細胞膜に穴を開けて破壊する作用", "細菌に付着し、マクロファージなどの食細胞が貪食しやすくする作用", "アレルギー反応を引き起こす作用"], "answer": 2, "explanation": "オプソニン作用とは、抗体が細菌などの異物に付着することで、マクロファージや好中球といった食細胞がその異物を認識し、貪食しやすくする働きのことです。" },
+    { "question": "大きな組織欠損を伴う創傷の治癒過程で形成され、最終的に瘢痕組織に置き換わる、血管に富んだ新しい結合組織を何と呼びますか？", "options": ["血餅", "肉芽組織", "ケロイド", "膿瘍"], "answer": 1, "explanation": "大きな組織欠損がある場合、治癒は二次治癒と呼ばれ、その過程で欠損部を埋めるために新生血管や線維芽細胞からなる肉芽組織が形成されます。" },
+    { "question": "ウイルス感染後の防御機構において、発熱を引き起こす直接的な原因物質はどれですか？", "options": ["抗体", "ヘルパーT細胞", "プロスタグランジン", "ヒスタミン"], "answer": 2, "explanation": "マクロファージなどが産生するサイトカイン（IL-1など）の刺激によりプロスタグランジンが産生され、これが脳の体温調節中枢に作用して発熱を引き起こします。" },
+    { "question": "唾液や母乳などの分泌液中に多く含まれ、消化管や気道といった粘膜表面での感染防御を担う免疫グロブリンはどれですか？", "options": ["IgG", "IgM", "IgD", "IgA"], "answer": 3, "explanation": "IgAは分泌液中に多く存在し、2量体を形成して粘膜免疫の主役となります。" },
+    { "question": "細胞性免疫において、ウイルスに感染した細胞やがん細胞を直接攻撃して破壊する主役の細胞はどれですか？", "options": ["形質細胞", "キラーT細胞", "マスト細胞", "ヘルパーT細胞"], "answer": 1, "explanation": "キラーT細胞（細胞傷害性Tリンパ球）は、ウイルス感染細胞などが提示する抗原を認識し、その細胞を直接攻撃して破壊する細胞性免疫の実行部隊です。" },
+    { "question": "A型の血液型を持つ人にB型の血液を輸血した場合に起こる「不適合輸血」の反応メカニズムとして正しいものはどれですか？", "options": ["A型の抗B抗体が、輸血されたB型赤血球のB抗原と反応し、赤血球が凝集・破壊される。", "A型のA抗原が、輸血されたB型赤血球の抗A抗体と反応し、赤血球が凝集・破壊される。", "輸血されたB型赤血球のB抗原どうしが結合し、赤血球が凝集・破壊される。", "T細胞が輸血されたB型赤血球を異物と認識し、直接攻撃して破壊する。"], "answer": 0, "explanation": "A型の人は血漿中に抗B抗体を持っており、これがB型赤血球の表面にあるB抗原と結合することで、免疫反応（凝集、溶血）が引き起こされます。" },
+    { "question": "進行性筋ジストロフィー症で見られる、筋線維が脂肪組織に置き換わることで下腿が太く見える現象を何と呼びますか？", "options": ["作業性肥大", "代償性肥大", "仮性肥大", "過形成"], "answer": 2, "explanation": "仮性肥大は、本来の組織が萎縮・消失し、その隙間を脂肪組織や結合組織が埋めることで、外見上は容積が増大して見える状態です。" },
+    { "question": "一次免疫応答で最も早期に産生され、5量体構造を持つ特徴的な免疫グロブリンはどれですか？", "options": ["IgG", "IgA", "IgM", "IgE"], "answer": 2, "explanation": "IgMは抗原に初めて暴露された後に形質細胞から最初に分泌される抗体で、5量体の大きな構造を持ち、補体を活性化する能力が高いです。" },
+    { "question": "抗体が細菌と結合した後に活性化され、細菌の細胞膜に穴を開けて破壊する液性因子（タンパク質群）はどれですか？", "options": ["インターロイキン", "サイトカイン", "ヒスタミン", "補体"], "answer": 3, "explanation": "補体は、抗体が細菌に結合すると活性化され、連鎖的な反応（カスケード）を経て膜侵襲複合体を形成し、細菌の細胞膜に穴を開けて溶菌させます。" },
+    { "question": "自然免疫を担い、異物に対して非特異的に素早く反応する細胞の組み合わせとして最も適切なものはどれですか？", "options": ["T細胞、B細胞", "好中球、マクロファージ", "形質細胞、ヘルパーT細胞", "NK細胞、B細胞"], "answer": 1, "explanation": "自然免疫は生まれつき備わっている防御機構で、好中球、マクロファージ、マスト細胞などが異物を非特異的に攻撃します。" },
+    { "question": "胃の粘膜が慢性的な刺激により腸の粘膜に似た細胞に変化する「腸上皮化生」は、どのような疾患の発生母地となる可能性がありますか？", "options": ["胃潰瘍", "胃がん", "逆流性食道炎", "急性胃炎"], "answer": 1, "explanation": "化生した組織は正常な組織と比べて不安定であり、がん化しやすい状態にあると考えられています。腸上皮化生は胃がんの発生母地となる可能性があります。" },
+    { "question": "ワクチンの一種である「不活化ワクチン」に関する説明として正しいものはどれですか？", "options": ["病原体の毒性を弱めて作られる。", "病原体の遺伝情報（mRNA）のみを利用する。", "熱や化学薬品で感染力を失わせた病原体から作られる。", "病原体の一部（スパイクタンパク質など）の遺伝子をプラスミドに組み込んで作られる。"], "answer": 2, "explanation": "不活化ワクチンは、ホルマリン処理などで病原体の感染性や毒性を完全になくし（不活化）、抗原としての性質だけを残して作製されます。" },
+    { "question": "母親から胎盤を通じて胎児に移行し、産まれたばかりの新生児を感染から守る唯一の免疫グロブリンはどれですか？", "options": ["IgA", "IgE", "IgM", "IgG"], "answer": 3, "explanation": "免疫グロブリンの中で分子量が比較的小さく、特殊な輸送機構を持つIgGのみが胎盤を通過することができます。" }
+  ],
+  "3rd": [
+    { "question":"炎症の5徴候のうち、「発赤」と「熱感」の主な原因となるメカニズムは？", "options":["血管透過性の亢進","ブラジキニンによる疼痛","白血球の遊走","局所の血管拡張と血流増大"], "answer":3, "explanation":"発赤と熱感は、局所の血管拡張により温かい血液の流入が増えることで生じます。" },
+    { "question":"急性炎症の初期に最初に集結し、貪食・殺菌を行う主要な白血球は？", "options":["好中球","リンパ球","マクロファージ","形質細胞"], "answer":0, "explanation":"好中球は急性炎症の初期に最初に動員され、貪食・殺菌で中心的に働きます。" },
+    { "question":"白血球が血管内皮を転がる「ローリング」に関与する接着分子は？", "options":["インテグリン","ケモカイン","セレクチン","ヒスタミン"], "answer":2, "explanation":"ローリングは内皮上のセレクチンと白血球糖鎖の弱い結合で起こります。" },
+    { "question":"肥満細胞から放出され、血管透過性亢進や血管拡張を起こすI型アレルギーの主要な化学伝達物質は？", "options":["ブラジキニン","ヒスタミン","プロスタグランジン","フィブリノーゲン"], "answer":1, "explanation":"ヒスタミンは肥満細胞の顆粒に豊富で、血管拡張と透過性亢進を強力に誘導します。" },
+    { "question":"急性炎症が終息せず、マクロファージやリンパ球が主体となり組織破壊と修復が併存する状態は？", "options":["急性炎症","慢性炎症","肉芽形成","滲出"], "answer":1, "explanation":"慢性炎症ではマクロファージやリンパ球が主体となり、組織破壊と修復が併存します。" },
+    { "question":"炎症刺激から数時間〜1日で上昇し、急性炎症の指標とされるタンパク質は？", "options":["IL-6","CRP","赤沈","免疫グロブリン"], "answer":1, "explanation":"CRPはIL-6刺激で肝臓から産生され、急性期タンパクとして臨床で広く用いられます。" },
+    { "question":"花粉症、気管支喘息、アナフィラキシーショックに共通するアレルギー分類は？", "options":["I型","II型","III型","IV型"], "answer":0, "explanation":"I型アレルギーはIgEと肥満細胞が関与し、即時に反応が出現します。" },
+    { "question":"I型アレルギーでヒスタミン放出（脱顆粒）を引き起こす直接のトリガーは？", "options":["IgEにアレルゲンが結合","T細胞の認識","IgG結合","補体活性化"], "answer":0, "explanation":"アレルゲンが肥満細胞表面のIgEを架橋すると脱顆粒が起こります。" },
+    { "question":"血液型不適合輸血による溶血はどのアレルギー型？", "options":["I型","II型","III型","IV型"], "answer":1, "explanation":"II型は細胞表面抗原に対するIgG/IgMが介在し、補体活性化などで破壊されます。" },
+    { "question":"免疫複合体が血管壁などに沈着して炎症を起こすアレルギー型は？", "options":["I型","II型","III型","IV型"], "answer":2, "explanation":"III型は免疫複合体の沈着を契機に組織障害が生じます。" },
+    { "question":"ツベルクリン反応や接触性皮膚炎など、T細胞が関与する遅延型アレルギーは？", "options":["I型","II型","III型","IV型"], "answer":3, "explanation":"IV型は感作T細胞による遅延型過敏反応です。" },
+    { "question":"バセドウ病の原因となる、受容体を刺激する自己抗体による病態は？", "options":["II型","III型","IV型","V型（刺激型）"], "answer":3, "explanation":"受容体を刺激して機能を亢進させるタイプはV型（またはII型の一部）に分類されます。" },
+    { "question":"免疫系が自己成分を攻撃してしまう疾患の総称は？", "options":["アレルギー","免疫不全症","自己免疫疾患","日和見感染"], "answer":2, "explanation":"自己に対する異常な免疫応答による疾患群を自己免疫疾患と呼びます。" },
+    { "question":"関節リウマチやSLEのように、全身の結合組織・血管が傷害される疾患群は？", "options":["膠原病","臓器特異的自己免疫疾患","免疫不全症","アレルギー"], "answer":0, "explanation":"膠原病は結合組織や血管を主座とする全身性自己免疫疾患群の総称です。" },
+    { "question":"涙腺や唾液腺が破壊され、乾燥症状を呈する膠原病は？", "options":["SLE","PSS","RA","シェーグレン症候群"], "answer":3, "explanation":"シェーグレン症候群は涙腺・唾液腺の炎症によるドライアイ・ドライマウスが特徴です。" },
+    { "question":"移植を受けた患者の免疫系が移植臓器を攻撃する反応は？", "options":["GVHD","拒絶反応","アナフィラキシー","自己免疫"], "answer":1, "explanation":"拒絶反応はレシピエントの免疫系がドナー臓器を攻撃する現象です。" },
+    { "question":"移植片に含まれるリンパ球が宿主を攻撃する合併症は？", "options":["GVHD","拒絶反応","II型アレルギー","日和見感染"], "answer":0, "explanation":"GVHD（移植片対宿主病）はドナーリンパ球が宿主を攻撃する現象です。" },
+    { "question":"移植の適合性判定に重要な、細胞表面の「自分のしるし」は？", "options":["免疫グロブリン","MHC (HLA)","サイトカイン","ケモカイン"], "answer":1, "explanation":"MHC（ヒトではHLA）は自己認識に関与し、移植適合性の判定に不可欠です。" },
+    { "question":"HIVが主に感染・破壊する免疫細胞は？", "options":["ヘルパーT細胞","B細胞","好中球","NK細胞"], "answer":0, "explanation":"HIVはCD4陽性ヘルパーT細胞に感染し、免疫機能を崩壊させます。" },
+    { "question":"胎盤を通過し、新生児を守る抗体は？", "options":["IgA","IgE","IgG","IgM"], "answer":2, "explanation":"胎盤を通過できるのはIgGのみです。" }
+  ],
+  "4th": [
+    { "question":"糖尿病の定義として最も適切なものは？", "options":["インスリン作用不足による高血糖状態","グルカゴン過剰による低血糖","α細胞破壊によるインスリン不足","腎機能低下による高血糖"], "answer":0, "explanation":"糖尿病はインスリンの不足や作用不足（抵抗性）により慢性的な高血糖が続く疾患です。" },
+    { "question":"血糖値を下げるインスリンを分泌する膵島の細胞は？", "options":["α細胞","β細胞","γ細胞","δ細胞"], "answer":1, "explanation":"β細胞がインスリンを、α細胞がグルカゴンを分泌します。" },
+    { "question":"インスリンの主な作用は？", "options":["ブドウ糖の細胞内取り込み促進","血糖値上昇","脂肪分解","グリコーゲン分解"], "answer":0, "explanation":"インスリンはブドウ糖を筋肉や脂肪細胞に取り込ませ、血糖値を下げます。" },
+    { "question":"インスリン刺激で細胞膜へ移動し、グルコースを取り込む輸送体は？", "options":["Insulin Receptor","GLUT1","GLUT4","Vesicle"], "answer":2, "explanation":"インスリン依存的に細胞膜へ移動するのはGLUT4です。" },
+    { "question":"過去1〜2ヶ月の平均血糖値を反映する指標は？", "options":["空腹時血糖","随時血糖","OGTT","HbA1c"], "answer":3, "explanation":"HbA1cは赤血球寿命に基づき過去1〜2ヶ月の平均血糖状態を反映します。" },
+    { "question":"1型糖尿病の主な発症機序は？", "options":["膵β細胞の自己免疫的破壊","インスリン抵抗性","過食","加齢"], "answer":0, "explanation":"1型は自己免疫等によりβ細胞が破壊されインスリンが欠乏します。" },
+    { "question":"2型糖尿病の特徴として正しいものは？", "options":["全体の5%","小児期発症が多い","インスリン抵抗性が関与","インスリン注射が必須"], "answer":2, "explanation":"2型はインスリン分泌低下と抵抗性が関与し、日本人の糖尿病の大部分を占めます。" },
+    { "question":"高血糖により生じ、血管壁を傷つける物質は？", "options":["血小板","活性酸素","糖化タンパク質","コレステロール"], "answer":1, "explanation":"高血糖による代謝異常で活性酸素が発生し、血管内皮を傷害します。" },
+    { "question":"糖尿病の3大合併症（細小血管障害）に含まれないのは？", "options":["網膜症","腎症","心筋症","神経障害"], "answer":2, "explanation":"3大合併症は網膜症、腎症、神経障害です。心筋症は大血管障害に関連します。" },
+    { "question":"糖尿病性網膜症で、虚血を補うために生じるもろい血管は？", "options":["小動脈瘤","硬性白斑","新生血管","硝子体出血"], "answer":2, "explanation":"虚血により新生血管が生じますが、脆いため出血しやすく失明の原因になります。" },
+    { "question":"糖尿病性腎症の糸球体病変の特徴は？", "options":["メサンギウム基質増加と硬化","メサンギウム減少","基底膜菲薄化","毛細血管拡張"], "answer":0, "explanation":"メサンギウム基質の増加と結節性病変、糸球体硬化が特徴です。" },
+    { "question":"糖尿病性腎症に特徴的な結節性病変は？", "options":["糸球体硬化","尿細管萎縮","血管肥厚","Kimmelstiel-Wilson病変"], "answer":3, "explanation":"Kimmelstiel-Wilson病変は糖尿病性腎症に特異的な結節性糸球体硬化像です。" },
+    { "question":"糖尿病性神経障害の主な原因は？", "options":["細小血管障害と代謝障害","運動神経障害","中枢神経障害","血小板凝集"], "answer":0, "explanation":"神経栄養血管の障害（虚血）と、ソルビトール蓄積などの代謝障害が原因です。" },
+    { "question":"日本での透析導入原因の第1位は？", "options":["慢性糸球体腎炎","腎硬化症","多発性嚢胞腎","糖尿病性腎症"], "answer":3, "explanation":"糖尿病性腎症は透析導入原因の第1位であり、年間1万人以上が導入されています。" },
+    { "question":"自己免疫疾患の根本的な原因は？", "options":["自己反応性T細胞の存在","感染","自己寛容の破綻","遺伝"], "answer":2, "explanation":"自分を攻撃しない仕組み（自己寛容）が破綻することで発症します。" },
+    { "question":"関節リウマチで炎症の主座となる部位は？", "options":["軟骨","骨","滑膜","靭帯"], "answer":2, "explanation":"滑膜の慢性炎症（滑膜炎）が本態で、パンヌスを形成し骨・軟骨を破壊します。" },
+    { "question":"関節リウマチの症状の特徴は？", "options":["朝のこわばり・対称性","夕方のこわばり・片側性","大関節から","変形しない"], "answer":0, "explanation":"朝のこわばり、多発性・対称性の関節炎が特徴です。" },
+    { "question":"正常な滑膜の特徴は？", "options":["多層化","一層","リンパ濾胞あり","絨毛状"], "answer":1, "explanation":"正常滑膜は一層〜数層の細胞からなり、平滑です。" },
+    { "question":"関節リウマチの滑膜病変でないものは？", "options":["絨毛状増生","リンパ濾胞形成","多層化","一層化"], "answer":3, "explanation":"RAでは滑膜細胞の増生・多層化、絨毛形成が見られます。一層化は正常に近い状態です。" },
+    { "question":"皮下リウマチ結節の病理所見、中心部に見られるのは？", "options":["フィブリノイド壊死","リンパ濾胞","血管新生","石灰化"], "answer":0, "explanation":"中心部のフィブリノイド壊死を柵状の類上皮細胞が取り囲む像が見られます。" }
+  ],
+  "5th": [
+    { "question":"体循環の説明として正しいものは？", "options":["右室→肺→左房","左室→全身→右房","肺静脈→左房","上大静脈→右房"], "answer":1, "explanation":"体循環は左心室から全身へ血液を送り、右心房へ戻る経路です。" },
+    { "question":"毛細血管で水分が組織に出る仕組みは？", "options":["膠質浸透圧＞血圧","血圧＞膠質浸透圧","リンパ吸収低下","透過性亢進"], "answer":1, "explanation":"動脈側では血圧が膠質浸透圧を上回るため、水分が押し出されます。" },
+    { "question":"門脈圧亢進症の最も危険な合併症は？", "options":["脾腫","腹水","食道静脈瘤破裂","肝腫大"], "answer":2, "explanation":"食道静脈瘤の破裂は大量吐血を招き、致死的になります。" },
+    { "question":"充血とうっ血の違いは？", "options":["静脈性か動脈性か","動脈性（赤）か静脈性（暗赤）か","病的か生理的か","慢性か急性か"], "answer":1, "explanation":"充血は動脈血増加で赤く、うっ血は静脈血停滞で暗赤色になります。" },
+    { "question":"左心不全で夜間に呼吸困難になる理由は？", "options":["血圧上昇","仰臥位による肺うっ血増悪","呼吸数減少","心拍増加"], "answer":1, "explanation":"寝ると静脈還流が増え、肺への血液貯留（肺うっ血）が悪化するためです。" },
+    { "question":"ナツメグ肝が見られる病態は？", "options":["左心不全","右心不全","肝硬変","門脈圧亢進症"], "answer":1, "explanation":"右心不全による肝うっ血で、肝臓の断面がナツメグ用になります。" },
+    { "question":"浮腫の原因として誤っているのは？", "options":["毛細血管内圧上昇","膠質浸透圧上昇","透過性亢進","リンパうっ滞"], "answer":1, "explanation":"膠質浸透圧の「低下」が浮腫の原因です。上昇すると水分を引き込みます。" },
+    { "question":"ネフローゼ症候群の浮腫の特徴的部位は？", "options":["下肢","顔面・眼瞼","腹部","上肢"], "answer":1, "explanation":"低アルブミン血症により、朝方に顔面や眼瞼の浮腫が目立ちます。" },
+    { "question":"一次止血とは？", "options":["血管収縮","血小板血栓形成","フィブリン形成","凝固因子活性化"], "answer":1, "explanation":"血小板が傷口に集まって栓をする段階を一次止血と呼びます。" },
+    { "question":"ビタミンK不足で出血傾向になる理由は？", "options":["血小板減少","凝固因子減少","血管脆弱化","赤血球減少"], "answer":1, "explanation":"ビタミンKは肝臓での凝固因子（II, VII, IX, X）合成に必須です。" },
+    { "question":"血栓形成の3要因（ウィルヒョウの3徴）は？", "options":["内皮障害、血流停滞、凝固亢進","血圧、脈拍、体温","貧血、脱水、低栄養","感染、炎症、免疫"], "answer":0, "explanation":"血管壁の傷害、血流のよどみ、血液成分の変化（固まりやすさ）の3つです。" },
+    { "question":"深部静脈血栓症の最重篤な合併症は？", "options":["腫脹","疼痛","肺塞栓症","静脈瘤"], "answer":2, "explanation":"血栓が飛んで肺動脈に詰まる肺塞栓症（エコノミークラス症候群）が致死的です。" },
+    { "question":"終動脈とは？", "options":["太い動脈","細い動脈","側副血行路を持たない動脈","静脈へ直結する動脈"], "answer":2, "explanation":"詰まると代わりの血流がないため、支配領域が必ず壊死（梗塞）します。" },
+    { "question":"貧血性梗塞（白色梗塞）が起こる臓器は？", "options":["肝臓","肺","脳・心・腎","腸管"], "answer":2, "explanation":"心臓、腎臓、脳など、組織が緻密で終動脈支配の臓器で起こります。" },
+    { "question":"狭心症と心筋梗塞の最大の違いは？", "options":["壊死の有無","発症時間","性差","予後"], "answer":1, "explanation":"狭心症は可逆的（壊死なし）、心筋梗塞は不可逆的（心筋壊死あり）です。" },
+    { "question":"医学的なショックの定義は？", "options":["精神的衝撃","循環不全による組織酸素不足","心停止","失神"], "answer":1, "explanation":"血圧低下などで全身の組織に十分な血液・酸素が送れなくなった状態です。" },
+    { "question":"敗血症性ショックの分類は？", "options":["循環血液量減少性","心原性","血液分布異常性","閉塞性"], "answer":2, "explanation":"血管拡張により血液が末梢にプールされ、相対的に循環量が不足します。" },
+    { "question":"ショック時の代償機転で誤っているのは？", "options":["心拍数増加","末梢血管拡張","RAA系活性化","交感神経活性化"], "answer":1, "explanation":"血圧を保つため、末梢血管は「収縮」します（蒼白・冷汗の原因）。" },
+    { "question":"DICで血栓と出血が同時に起きる理由は？", "options":["免疫異常","凝固因子の消費枯渇","合成亢進","産生低下"], "answer":1, "explanation":"全身で血栓ができすぎて凝固因子・血小板を使い果たし、止血できなくなります。" },
+    { "question":"ショック肺（ARDS）の病理所見は？", "options":["硝子膜形成","癌浸潤","動脈硬化","慢性炎症"], "answer":0, "explanation":"肺胞壁にフィブリンなどが張り付いて「硝子膜」を作り、ガス交換を阻害します。" }
+  ],
+  "6th": [
+    { "question": "血圧測定において、収縮期血圧を示すのはどの時点ですか？", "options": ["コロトコフ音が最初に聞こえた時点", "コロトコフ音が消失した時点", "マンシェットを最大に膨らませた時点", "マンシェットの圧が最も低くなった時点"], "answer": 0, "explanation": "収縮期血圧は、マンシェットの圧を下げていく際にコロトコフ音が最初に聞こえた時点の圧力です。拡張期血圧はコロトコフ音が消失する時点の圧力を示します。" },
+    { "question": "高血圧の診断基準として正しいものはどれですか（診察室血圧）？", "options": ["収縮期血圧120mmHg以上または拡張期血圧80mmHg以上", "収縮期血圧130mmHg以上または拡張期血圧85mmHg以上", "収縮期血圧140mmHg以上または拡張期血圧90mmHg以上", "収縮期血圧150mmHg以上または拡張期血圧95mmHg以上"], "answer": 2, "explanation": "日本高血圧学会のガイドラインでは、診察室血圧で収縮期血圧が140mmHg以上、または拡張期血圧が90mmHg以上の場合を高血圧と定義しています。" },
+    { "question": "本態性高血圧に関する説明として正しいものはどれですか？", "options": ["原因が特定できる高血圧で全体の約10%を占める", "原因が特定できない高血圧で全体の約90%を占める", "腎疾患が原因で発症する高血圧", "必ず遺伝的要因のみで発症する高血圧"], "answer": 1, "explanation": "本態性高血圧は原因が特定できない高血圧で、全体の約90%を占めます。遺伝的要因と環境要因が複雑に絡み合って発症します。" },
+    { "question": "高血圧が「静かなる殺人者（silent killer）」と呼ばれる理由はどれですか？", "options": ["治療薬の副作用が少ないから", "自覚症状がほとんどないまま血管障害が進行するから", "急速に血圧が上昇するから", "若年者には発症しないから"], "answer": 1, "explanation": "高血圧は自覚症状がほとんどないため、患者さんは何も感じないまま血管へのダメージが蓄積されます。" },
+    { "question": "門脈圧亢進症の最も多い原因はどれですか？", "options": ["急性肝炎", "肝硬変", "胆石症", "膵炎"], "answer": 1, "explanation": "門脈圧亢進症の最も多い原因は肝硬変です。肝硬変では肝組織の線維化が進み、肝内の血管が圧迫されて血流抵抗が増大し、門脈圧が上昇します。" },
+    { "question": "左心不全の主要な症状として正しいものはどれですか？", "options": ["肝腫大と腹水", "呼吸困難と肺うっ血", "下肢の浮腫", "頸静脈の怒張"], "answer": 1, "explanation": "左心不全では、左心室のポンプ機能低下により肺静脈系にうっ血が生じ、呼吸困難や肺うっ血が主要な症状となります。" },
+    { "question": "起座呼吸（orthopnea）の説明として正しいものはどれですか？", "options": ["運動時のみ呼吸困難が出現する症状", "横になると呼吸が苦しくなり、上体を起こすと楽になる症状", "深呼吸ができなくなる症状", "呼吸が速くなる症状"], "answer": 1, "explanation": "起座呼吸は左心不全に特徴的な症状で、仰臥位では静脈還流量が増加して肺うっ血が増悪するため呼吸困難となります。" },
+    { "question": "右心不全の特徴的な症状はどれですか？", "options": ["肺うっ血による呼吸困難", "全身の静脈系のうっ血による下肢浮腫や肝腫大", "狭心痛", "血痰"], "answer": 1, "explanation": "右心不全では全身の静脈系にうっ血が生じ、頸静脈怒張、肝腫大、下肢の浮腫、腹水などの症状が現れます。" },
+    { "question": "求心性肥大（concentric hypertrophy）の原因として正しいものはどれですか？", "options": ["容量負荷（僧帽弁閉鎖不全など）", "圧負荷（高血圧や大動脈弁狭窄症など）", "心筋虚血", "不整脈"], "answer": 1, "explanation": "求心性肥大は圧負荷に対する反応として起こります。心室壁が肥厚しますが内腔はあまり拡大しません。" },
+    { "question": "動脈硬化（粥状硬化）の本質として正しいものはどれですか？", "options": ["血管内膜への脂質の沈着と血管壁の線維性肥厚", "血管壁の石灰化のみ", "血管の拡張", "血管壁の菲薄化"], "answer": 0, "explanation": "粥状硬化の本質は、血管内膜への脂質の沈着と血管壁の線維性肥厚です。" },
+    { "question": "動脈の中膜を構成する主要な成分とその機能として正しいものはどれですか？", "options": ["血管内皮細胞で、血栓形成を抑制する", "平滑筋細胞と弾性線維で、血管の収縮・弛緩と弾力性を担う", "膠原線維のみで、血管を周囲組織に固定する", "血管栄養血管で、血管壁に栄養を供給する"], "answer": 1, "explanation": "動脈の中膜は平滑筋細胞と弾性線維から構成されます。平滑筋細胞は血管径の調節を、弾性線維は血管の弾力性を担います。" },
+    { "question": "動脈硬化の形成過程における最初の段階はどれですか？", "options": ["泡沫細胞の形成", "血管内皮の傷害", "石灰化", "血栓形成"], "answer": 1, "explanation": "動脈硬化の形成は、高血圧、高脂血症、喫煙などの危険因子による血管内皮の傷害から始まります。" },
+    { "question": "脂肪線条（fatty streak）に関する説明として正しいものはどれですか？", "options": ["動脈硬化の最も進行した病変である", "動脈硬化の最も初期の病変で、若年者でも認められる", "必ず心筋梗塞を引き起こす", "治療の対象とならない"], "answer": 1, "explanation": "脂肪線条は動脈硬化の最も初期の病変で、内膜下に泡沫細胞が集積したものです。小児期から認められることがあります。" },
+    { "question": "動脈硬化の危険因子とその機序の組み合わせで正しいものはどれですか？", "options": ["高HDLコレステロール血症は血管壁からコレステロールを除去するため保護的に働く", "糖尿病は終末糖化産物（AGEs）の形成を抑制するため保護的に働く", "喫煙は血管内皮機能を改善するため保護的に働く", "運動不足は血管を拡張させるため保護的に働く"], "answer": 0, "explanation": "高HDLコレステロール血症は、HDLが血管壁からコレステロールを肝臓に運ぶ働きにより動脈硬化を予防します。" },
+    { "question": "狭心症と心筋梗塞の違いとして正しいものはどれですか？", "options": ["狭心症は心筋壊死を伴うが、心筋梗塞は伴わない", "狭心症は一過性の虚血で心筋壊死を伴わないが、心筋梗塞は心筋壊死を伴う", "狭心症は治療不要だが、心筋梗塞は治療が必要", "両者に違いはない"], "answer": 1, "explanation": "狭心症は一過性の虚血で心筋壊死は生じません。一方、心筋梗塞は心筋が虚血性壊死に陥った状態です。" },
+    { "question": "急性心筋梗塞の治療において「time is muscle」という原則の意味として正しいものはどれですか？", "options": ["時間をかけてゆっくり治療すべきという意味", "発症後できるだけ早く冠動脈を再開通させることで壊死範囲を最小限にできるという意味", "心筋が時間とともに再生するという意味", "治療のタイミングは予後に影響しないという意味"], "answer": 1, "explanation": "心筋梗塞では、発症後早期に血流を再開通させれば壊死範囲を最小限に抑えられるため、迅速な治療が極めて重要です。" },
+    { "question": "脳卒中の分類で最も頻度が高いものはどれですか？", "options": ["脳出血", "くも膜下出血", "脳梗塞", "一過性脳虚血発作"], "answer": 2, "explanation": "脳卒中の中で最も頻度が高いのは脳梗塞で、全体の約60〜70%を占めます。" },
+    { "question": "心原性脳塞栓症の最も多い原因はどれですか？", "options": ["高血圧", "心房細動", "糖尿病", "喫煙"], "answer": 1, "explanation": "心原性脳塞栓症の最も多い原因は心房細動です。心房内で形成された血栓が遊離して脳動脈を閉塞します。" },
+    { "question": "脳出血の好発部位として最も多いのはどれですか？", "options": ["小脳", "橋", "被殻", "大脳皮質"], "answer": 2, "explanation": "脳出血の好発部位は被殻で、全脳出血の約40〜50%を占めます。" },
+    { "question": "一過性脳虚血発作（TIA）の重要性として正しいものはどれですか？", "options": ["症状が消失するため治療不要である", "脳梗塞の前兆として重要で、発症後高率に脳梗塞を起こすため緊急の精査が必要", "高齢者のみに発症する", "予後に影響しない"], "answer": 1, "explanation": "TIAは脳梗塞の強力な予測因子であり、脳梗塞発症を予防できる最後のタイミングとして重要です。" }
+  ],
+  "7th": [
+    { "question": "腫瘍の定義として正しいものはどれですか?", "options": ["細胞が他律的に一時的に増殖する", "細胞が自律的に過剰に増殖し、単クローン性である", "細胞が炎症反応により増殖する", "細胞が再生過程で増殖する"], "answer": 1, "explanation": "腫瘍とは、細胞が自律的に過剰に増殖し、かつ単一の細胞に由来する（単クローン性）病変です。" },
+    { "question": "悪性腫瘍細胞の細胞異型として正しくないものはどれですか?", "options": ["細胞の大型化", "核の縮小とN/C比の減少", "核小体の増加", "異常な核分裂像"], "answer": 1, "explanation": "悪性腫瘍細胞では核が増大し、N/C比（核/細胞質比）が増加します。核の縮小は特徴ではありません。" },
+    { "question": "がんの分化度について正しい記述はどれですか?", "options": ["低分化がんは正常組織によく似ている", "高分化がんは発生母地との違いが大きい", "低分化がんほど一般に悪性度が高い", "分化度は予後と関係がない"], "answer": 2, "explanation": "低分化がんは正常組織との違いが大きく、悪性度が高く予後不良であることが多いです。" },
+    { "question": "良性腫瘍の特徴として正しいものはどれですか?", "options": ["増殖速度が速く浸潤性に発育する", "遠隔転移を起こす", "被膜に包まれ膨張性発育を示す", "細胞異型が著明である"], "answer": 2, "explanation": "良性腫瘍は被膜に包まれて膨張性に発育し、転移や浸潤をしません。" },
+    { "question": "上皮性悪性腫瘍の名称として正しいものはどれですか?", "options": ["脂肪肉腫", "腺癌", "平滑筋腫", "骨肉腫"], "answer": 1, "explanation": "上皮性悪性腫瘍は「〜癌」と呼ばれます。腺癌は腺上皮由来です。" },
+    { "question": "癌腫と肉腫の違いについて正しい記述はどれですか?", "options": ["癌腫は血行性転移が主体である", "肉腫は成人に圧倒的に多い", "癌腫はリンパ行性転移が主体である", "肉腫は全悪性腫瘍の約90%を占める"], "answer": 2, "explanation": "癌腫（上皮性）はリンパ行性転移が主体、肉腫（非上皮性）は血行性転移が主体です。" },
+    { "question": "胃の腺組織から発生した悪性腫瘍の正しい名称はどれですか?", "options": ["胃肉腫", "胃腺腫", "胃腺癌", "胃平滑筋腫"], "answer": 2, "explanation": "腺組織由来の悪性腫瘍なので「腺癌」となります。" },
+    { "question": "がんの本質について正しい記述はどれですか?", "options": ["純粋に環境要因のみで発生する", "遺伝的素因と外因による遺伝子の病気", "感染症のみが原因である", "加齢のみで必ず発生する"], "answer": 1, "explanation": "がんは遺伝的要因と環境要因による「遺伝子の病気」です。" },
+    { "question": "原がん遺伝子について正しい記述はどれですか?", "options": ["正常状態では細胞増殖や分化に必要な遺伝子である", "生まれつき異常な遺伝子である", "すべての人が持っていない特殊な遺伝子である", "細胞増殖を常に抑制する遺伝子である"], "answer": 0, "explanation": "原がん遺伝子は正常な細胞増殖に必要な遺伝子で、変異するとがん遺伝子になります。" },
+    { "question": "原がん遺伝子ががん遺伝子になるメカニズムとして正しくないものはどれですか?", "options": ["点変異", "遺伝子増幅", "染色体転座", "遺伝子の完全欠失"], "answer": 3, "explanation": "「完全欠失」は機能喪失を意味し、これはがん抑制遺伝子の不活化メカニズムです。" },
+    { "question": "がん抑制遺伝子の役割として正しいものはどれですか?", "options": ["細胞増殖を促進する", "細胞増殖を抑制し、DNA修復や細胞死を誘導する", "がん遺伝子を活性化する", "常に細胞を分裂させる"], "answer": 1, "explanation": "がん抑制遺伝子はブレーキ役で、増殖抑制やDNA修復、アポトーシス誘導を行います。" },
+    { "question": "p53遺伝子について正しい記述はどれですか?", "options": ["がん遺伝子の代表例である", "ゲノムの守護神と呼ばれる重要ながん抑制遺伝子である", "人のがんではほとんど変異しない", "DNA損傷時に細胞増殖を促進する"], "answer": 1, "explanation": "p53は「ゲノムの守護神」と呼ばれる代表的ながん抑制遺伝子です。" },
+    { "question": "多段階発がんについて正しい記述はどれですか?", "options": ["1つの遺伝子異常で即座にがんが発生する", "複数の遺伝子異常が段階的に蓄積してがんが発生する", "環境要因のみでがんが発生する", "遺伝的要因は関係ない"], "answer": 1, "explanation": "がんは複数の遺伝子変異が時間をかけて蓄積することで発生します。" },
+    { "question": "大腸がんの多段階発がん過程で最初に変異する遺伝子はどれですか?", "options": ["p53遺伝子", "APC遺伝子", "K-RAS遺伝子", "BRCA1遺伝子"], "answer": 1, "explanation": "大腸がんではAPC遺伝子の変異が最初のステップとなることが多いです。" },
+    { "question": "日本人男性におけるがんの最大の発生要因はどれですか?", "options": ["飲酒", "喫煙", "運動不足", "ストレス"], "answer": 1, "explanation": "日本人男性のがん原因のトップは喫煙です。" },
+    { "question": "慢性感染に起因するがんの組み合わせとして正しくないものはどれですか?", "options": ["B型肝炎ウイルス - 肝細胞がん", "ヘリコバクター・ピロリ菌 - 胃がん", "ヒトパピローマウイルス(HPV) - 子宮頸がん", "インフルエンザウイルス - 肺がん"], "answer": 3, "explanation": "インフルエンザウイルスはがんの原因とはされません。" },
+    { "question": "悪性腫瘍の遠隔転移の経路として正しくないものはどれですか?", "options": ["リンパ行性転移", "血行性転移", "播種性転移", "神経性転移"], "answer": 3, "explanation": "主な転移経路はリンパ行性、血行性、播種性の3つです。" },
+    { "question": "上皮内がんについて正しい記述はどれですか?", "options": ["既に遠隔転移がある状態", "基底膜を破って浸潤している状態", "がん細胞が上皮内にとどまり基底膜を破っていない状態", "治療不可能な進行がん"], "answer": 2, "explanation": "上皮内がんは基底膜を破っていない状態で、転移の可能性はなく、切除で根治します。" },
+    { "question": "胃がんの深達度分類で早期がんに含まれるのはどれですか?", "options": ["漿膜まで浸潤したがん", "粘膜下層までの浸潤にとどまるがん", "固有筋層に浸潤したがん", "他臓器に浸潤したがん"], "answer": 1, "explanation": "早期胃がんは、リンパ節転移の有無に関わらず、浸潤が粘膜下層までのものを指します。" },
+    { "question": "消化管がんが血行性転移を起こす場合、最初に転移しやすい臓器はどれですか?", "options": ["脳", "肺", "肝臓", "骨"], "answer": 2, "explanation": "消化管の血液は門脈を通って肝臓に流れるため、肝臓への転移が最も多いです。" }
+  ]
+};
+
+// ==========================================
+// アプリロジック
+// ==========================================
+let currentQuestions = [];
+let currentIndex = 0;
+let userAnswers = [];
+let currentMode = '';
+
+// テーマ切り替え
+function toggleTheme() {
+  document.body.classList.toggle('dark-theme');
+  const isDark = document.body.classList.contains('dark-theme');
+  localStorage.setItem('quizTheme', isDark ? 'dark' : 'light');
+}
+
+// 初期化
+window.onload = () => {
+  if (localStorage.getItem('quizTheme') === 'dark') {
+    document.body.classList.add('dark-theme');
+  }
+};
+
+// クイズ開始
+function startQuiz(mode) {
+  currentMode = mode;
+  let questions = [];
+
+  if (mode === 'all') {
+    // 全て結合してシャッフル
+    Object.values(ALL_QUIZZES).forEach(arr => questions.push(...arr));
+    questions = shuffleArray(questions);
+  } else {
+    // 特定の回のみ
+    questions = [...ALL_QUIZZES[mode]]; // コピー
+    questions = shuffleArray(questions); // 順序シャッフル
+  }
+
+  currentQuestions = questions;
+  currentIndex = 0;
+  userAnswers = [];
+
+  // 画面遷移
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('result-screen').classList.add('hidden');
+  document.getElementById('quiz-screen').classList.remove('hidden');
+
+  // モード表示更新
+  const modeNames = {
+    'all': '🔥 全問チャレンジ',
+    '1st': '第1回：組織・細胞障害',
+    '2nd': '第2回：免疫・アレルギー',
+    '3rd': '第3回：炎症と修復',
+    '4th': '第4回：糖尿病・自己免疫',
+    '5th': '第5回：循環障害 (1)',
+    '6th': '第6回：循環障害 (2)',
+    '7th': '第7回：腫瘍・がん'
+  };
+  document.getElementById('mode-label').textContent = modeNames[mode];
+
+  renderQuestion();
+}
+
+// 設問表示
+function renderQuestion() {
+  const q = currentQuestions[currentIndex];
+  
+  // 進捗バー
+  const progress = ((currentIndex + 1) / currentQuestions.length) * 100;
+  document.getElementById('progress-bar').style.width = `${progress}%`;
+  document.getElementById('question-count').textContent = `Q. ${currentIndex + 1} / ${currentQuestions.length}`;
+
+  // 問題文
+  document.getElementById('question-text').textContent = q.question;
+
+  // 選択肢（シャッフル）
+  const optionsContainer = document.getElementById('options-grid');
+  optionsContainer.innerHTML = '';
+  
+  // 元のインデックスを保持してシャッフル
+  const indexedOptions = q.options.map((opt, i) => ({ text: opt, index: i }));
+  const shuffledOptions = shuffleArray(indexedOptions);
+
+  shuffledOptions.forEach(optObj => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = optObj.text;
+    btn.onclick = () => checkAnswer(optObj.index, btn);
+    optionsContainer.appendChild(btn);
+  });
+
+  // UIリセット
+  document.getElementById('explanation').style.display = 'none';
+  document.getElementById('next-btn').style.display = 'none';
+}
+
+// 答え合わせ
+function checkAnswer(selectedIndex, btnElement) {
+  // 二重回答防止
+  const buttons = document.querySelectorAll('.option-btn');
+  buttons.forEach(b => b.disabled = true);
+
+  const q = currentQuestions[currentIndex];
+  const isCorrect = (selectedIndex === q.answer);
+  
+  // 記録
+  userAnswers.push({
+    question: q.question,
+    isCorrect: isCorrect,
+    userSelect: q.options[selectedIndex],
+    correctAnswer: q.options[q.answer],
+    explanation: q.explanation,
+    qIndex: currentIndex + 1
+  });
+
+  // スタイル適用
+  if (isCorrect) {
+    btnElement.classList.add('correct');
+  } else {
+    btnElement.classList.add('incorrect');
+    // 正解をハイライト
+    buttons.forEach(b => {
+      if (b.textContent === q.options[q.answer]) {
+        b.classList.add('correct');
+      }
+    });
+  }
+
+  // 解説表示
+  const expBox = document.getElementById('explanation');
+  document.getElementById('explanation-text').textContent = q.explanation;
+  expBox.style.display = 'block';
+  expBox.style.borderColor = isCorrect ? '#34c759' : '#ef4444';
+
+  // 次へボタン
+  const nextBtn = document.getElementById('next-btn');
+  if (currentIndex < currentQuestions.length - 1) {
+    nextBtn.textContent = '次の問題へ';
+  } else {
+    nextBtn.textContent = '結果を見る';
+  }
+  nextBtn.style.display = 'block';
+}
+
+// 次の問題へ
+function nextQuestion() {
+  if (currentIndex < currentQuestions.length - 1) {
+    currentIndex++;
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+// 結果表示
+function showResult() {
+  document.getElementById('quiz-screen').classList.add('hidden');
+  document.getElementById('result-screen').classList.remove('hidden');
+
+  const correctCount = userAnswers.filter(a => a.isCorrect).length;
+  const total = userAnswers.length;
+  const percentage = Math.round((correctCount / total) * 100);
+
+  // スコアアニメーション
+  animateScore('score-num', correctCount);
+  document.getElementById('total-num').textContent = total;
+
+  // メッセージ
+  const msgEl = document.getElementById('result-msg');
+  if (percentage === 100) {
+    msgEl.textContent = '🎉 完璧です！素晴らしい知識！';
+    msgEl.style.color = '#34c759';
+  } else if (percentage >= 80) {
+    msgEl.textContent = '👏 素晴らしい！あと少しで満点です。';
+    msgEl.style.color = '#007aff';
+  } else {
+    msgEl.textContent = '💪 お疲れ様でした！復習して苦手をなくしましょう。';
+    msgEl.style.color = '#ff9500';
+  }
+
+  // 間違いリスト
+  const wrongList = document.getElementById('wrong-list');
+  const wrongItems = document.getElementById('wrong-items');
+  wrongItems.innerHTML = '';
+  
+  const wrongs = userAnswers.filter(a => !a.isCorrect);
+  if (wrongs.length > 0) {
+    wrongList.style.display = 'block';
+    wrongs.forEach(w => {
+      const li = document.createElement('li');
+      li.style.marginBottom = '10px';
+      li.innerHTML = `
+        <strong>Q${w.qIndex}:</strong> ${w.question}<br>
+        <span style="color:#ef4444">あなたの回答: ${w.userSelect}</span> / 
+        <span style="color:#34c759">正解: ${w.correctAnswer}</span><br>
+        <span style="font-size:0.9em; color:#666;">💡 ${w.explanation}</span>
+      `;
+      wrongItems.appendChild(li);
+    });
+  } else {
+    wrongList.style.display = 'none';
+  }
+}
+
+// ユーティリティ: シャッフル
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// ユーティリティ: スコアカウンター
+function animateScore(id, target) {
+  let current = 0;
+  const el = document.getElementById(id);
+  const interval = setInterval(() => {
+    if (current >= target) {
+      clearInterval(interval);
+      el.textContent = target;
+    } else {
+      current++;
+      el.textContent = current;
+    }
+  }, 50);
+}
+
+// 画面遷移
+function showStartScreen() {
+  document.getElementById('result-screen').classList.add('hidden');
+  document.getElementById('start-screen').classList.remove('hidden');
+}
+
+function retryQuiz() {
+  // 同じモードで再開
+  startQuiz(currentMode);
+}
+</script>
+</body>
+</html>
